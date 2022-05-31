@@ -1,0 +1,695 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:md="http://cnx.rice.edu/mdml">
+  <title>Điều khiển cạnh tranh</title>
+  <metadata>
+  <md:content-id>m29965</md:content-id><md:title>Điều khiển cạnh tranh</md:title>
+  <md:abstract>MỤC ĐÍCH
+	Một trong các tính chất cơ bản của một giao dịch là tính cô lập. Khi một vài giao dịch thực hiện một cách cạnh tranh trong CSDL, tính cô lập có thể không được bảo tồn. Đối với hệ thống, cần phải điều khiển sự trao đổi giữa các giao dịch cạnh tranh; sự điều khiển này được thực hiện thông qua một trong tập hợp đa dạng các cơ chế được gọi là sơ đồ điều khiển cạnh tranh. 
+	Các sơ đồ điều khiển cạnh tranh được xét trong chương này được dựa trên tính khả tuần tự. Trong chương này ta cũng xét sự quản trị các giao dịch thực hiện cạnh canh nhưng không xét đến sự cố hỏng hóc.  
+YÊU CẦU
+	Hiểu các khái niệm
+	Hiểu các kỹ thuật điều khiển cạnh tranh:
+-	Các kỹ thuật dựa trên chốt (lock)
+-	Các kỹ thuật dựa trên tem thởi gian
+-	Các kỹ thuật hỗp hợp
+Hiểu nguyên lý của các kỹ thuật này
+	Hiểu các kỹ thuật điều khiển deadlock</md:abstract>
+  <md:uuid>be213695-26c1-4f02-86c9-937ce9891064</md:uuid>
+</metadata>
+
+<content>
+    <section id="id-767149242974">
+      <title>GIAO THỨC DỰA TRÊN CHỐT</title>
+      <para id="id21391694">Một phương pháp để đảm bảo tính khả tuần tự là yêu cầu việc truy xuất đến hạng mục dữ liệu được tiến hành theo kiểu loại trừ tương hỗ; có nghĩa là trong khi một giao dịch đang truy xuất một hạng mục dữ liệu, không một giao dịch nào khác có thể sửa đổi hạng mục này. Phương pháp chung nhất được dùng để thực thi yêu cầu này là cho phép một giao dịch truy xuất một hạng mục dữ liệu chỉ nếu nó đang giữ chốt trên hạng mục dữ liệu này.</para>
+      <section id="id-874892481486">
+        <title>CHỐT (Lock)</title>
+        <para id="id21391717">Có nhiều phương thức chốt hạng mục dữ liệu. Ta hạn chế việc nghiên cứu trên hai phương thức:</para>
+        <list id="id21391726" list-type="enumerated">
+          <item>Shared. Nếu một giao dịch Ti nhận được một chốt ở phương thức shared (ký hiệu là S) trên hạng mục Q, khi đó Ti có thể đọc, nhưng không được viết Q.</item>
+          <item>Exclusive. Nếu một giao dịch Ti nhận được một chốt ở phương thức Exclusive (ký hiệu là X), khi đó Ti có thể cả đọc lẫn viết Q.</item>
+        </list>
+        <para id="id21391782">Ta yêu cầu là mỗi giao dịch đòi hỏi một chốt ở một phương thức thích hợp trên hạng mục dữ liệu Q, phụ thuộc vào kiểu hoạt động mà nó sẽ thực hiện trên Q. Giả sử một giao dịch Ti đồi hỏi một chốt phương thức A trên hạng mục Q mà trên nó giao dich Tj (Tj  Ti) hiện đang giữ một chốt phương thức B. Nếu giao dịch Ti có thể được cấp một chốt trên Q ngay, bất chấp sự hiện diện của chốt phương thức B, khi đó ta nói phương thức A tương thích với phương thức B. Một hàm như vậy có thể được biểu diễn bởi một ma trận. Quan hệ tương thích giữa hai phương thức chốt được cho bởi ma trận comp sau:</para>
+        <figure id="id21391852">
+          <media id="id45383458" alt=""><image src="../../media/graphics1-e4ae.png" mime-type="image/png" height="108" width="454"/></media>
+        </figure>
+        <para id="id21391876">Các chốt phương thức shared có thể được giữ đồng thời trên một hạng mục dữ liệu. Một chốt exclusive đến sau phải chờ đến tận khi tất cả các chốt phương thức shared đến trước được tháo ra.</para>
+        <para id="id21391906">Một giao dịch yêu cầu một chốt shared trên hạng mục dữ liệu Q bằng cách thực hiện chỉ thị lock-S(Q), yêu cầu một chốt exclusive thông qua chỉ thị lock-X(Q). Một hạng mục dữ liệu Q có thể được tháo chốt thông qua chỉ thị unlock(Q). </para>
+        <para id="id21391949">Để truy xuất một hạng mục dữ liệu, giao dịch Ti đầu tiên phải chốt hạng mục này. Nếu hạng mục này đã bị chốt bởi một giao dịch khác ở phương thức không tương thích, bộ điều khiển cạnh tranh sẽ không cấp chốt cho đến tận khi tất cả các chốt không tương thích bị giữ bởi các giao dịch khác được tháo. Như vậy Ti phải chờ đến tận khi tất cả các chốt không tương thích bị giữ bởi các giao dịch khác được giải phóng.</para>
+        <para id="id21391985">Giao dịch Ti có thể tháo chốt một hạng mục dữ liệu mà nó đã chốt trước đây. Một giao dịch cần thiết phải giữ một chốt trên một hạng mục dữ liệu chừng nào mà nó còn truy xuất hạng mục này. Hơn nữa, đối với một giao dịch việc tháo chốt ngay sau truy xuất cuối cùng đến hạng mục dữ liệu không luôn luôn là điều mong muốn vì như vậy tính khả tuần tự có thể không được đảm bảo. Để minh hoạ cho tình huống này, ta xét ví dụ sau: A và B là hai tài khoản có thể được truy xuất bởi các giao dịch T1 và T2 . Giao dịch T1 chuyển 50$ từ tài khoản B sang tài khoản A và đươch xác định như sau:</para>
+        <figure id="id21392040">
+          <media id="id39477972" alt=""><image src="../../media/graphics2-befc.png" mime-type="image/png" height="276" width="164"/></media>
+        </figure>
+        <para id="id21392064">Giao dịch T2 hiển thị tổng số lượng tiền trong các tài khoản A và B (A + B) và được xác định như sau;</para>
+        <figure id="id21392081">
+          <media id="id41171497" alt=""><image src="../../media/graphics3-ab07.png" mime-type="image/png" height="201" width="176"/></media>
+        </figure>
+        <para id="id21392105">Giả sử giá trị của tài khoản A và B tương ứng là 100$ và 200$. Nếu hai giao dịch này thực hiện tuần tự, hoặc theo thứ tự T1, T2 hoặc theo thứ tự T2 , T1 , và khi dó T2 sẽ hiển thị giá trị 300$. Tuy nhiên nếu các giao dịch này thực hiện cạnh tranh, giả sử theo lịch trình schedule-1, trong trường hợp như vậy giao dịch T2 sẽ hiển thị giá trị 250$ --- một kết quả không đúng. Lý do của sai lầm này là do giao dịch T1 đã tháo chốt hạng mục B quá sớm và T2 đã tham khảo một trạng thái không nhất quán !!!</para>
+        <para id="id21392175">Lịch trình schedule 1 bày tỏ các hành động được thực hiện bởi các giao dịch cũng như các thời điểm khi các chốt được cấp bởi bộ quản trị điều khiển cạnh tranh. Giao dịch đưa ra một yêu cầu chốt không thể thực hiện hành động kế của mình đến tận khi chốt được cấp bởi bộ quản trị điều khiển cạnh tranh; do đó, chốt phải được cấp trong khoảng thời gian giữa hoạt động yêu cầu chốt và hành động sau của giao dịch. Sau này ta sẽ luôn giả thiết chốt được cấp cho giao dịch ngay trước hành động kế và như vậy ta có thể bỏ qua cột bộ quản trị điều khiển cạnh tranh trong bảng</para>
+        <figure id="id21392213">
+          <media id="id43551039" alt=""><image src="../../media/graphics4-5080.png" mime-type="image/png" height="581" width="488"/></media>
+        </figure>
+        <para id="id21392237">Bây giờ giả sử rằng tháo chốt bị làm trễ đến cuối giao dịch. Giao dịch T3 tương ứng với T1 với tháo chốt bị làm trễ được định nghĩa như sau:</para>
+        <figure id="id21392261">
+          <media id="id41442085" alt=""><image src="../../media/graphics5-bc20.png" mime-type="image/png" height="227" width="154"/></media>
+        </figure>
+        <para id="id21392285">Giao dịch T4 tương ứng với T2 với tháo chốt bị làm trễ được xác định như sau:</para>
+        <figure id="id21392306">
+          <media id="id44226506" alt=""><image src="../../media/graphics6-54eb.png" mime-type="image/png" height="173" width="156"/></media>
+        </figure>
+        <para id="id21392330"/>
+        <para id="id21392334">Các lịch trình có thể trên T3 và T4 không để cho T4 hiển thị trạng thái không nhất quán. </para>
+        <para id="id21392358">Tuy nhiên, sử dụng chốt có thể dẫn đến một tình huống không mong đợi. Ta hãy xét lịch trình bộ phận schedule-2 trên T3 và T4 sau:</para>
+        <figure id="id21392393">
+          <media id="id40062105" alt=""><image src="../../media/graphics7-4a6f.png" mime-type="image/png" height="230" width="246"/></media>
+        </figure>
+        <para id="id21392416">Do T3 giữ một chốt phương thức Exclusive trên B, nên yêu cầu một chốt phương thức shared của T4 trên B phải chờ đến khi T3 tháo chốt. Cũng vậy, T3 yêu cầu một chốt Exclusive trên A trong khi T4 đang giữ một chốt shared trên nó và như vậy phải chờ. Ta gặp phải tình huống trong đó T3 chờ đợi T4 đồng thời T4 chờ đợi T3 -- một sự chờ đợi vòng tròn -- và như vậy không giao dịch nào có thể tiến triển. Tình huống này được gọi là deadlock (khoá chết). Khi tình huống khoá chết xảy ra hệ thống buộc phải cuộn lại một trong các giao dịch. Mỗi khi một giao dịch bị cuộn lại, các hạng mục dữ liệu bị chốt bởi giao dịch phải được tháo chốt và nó trở nên sẵn có cho giao dịch khác, như vậy các giao dịch này có thể tiếp tục được sự thực hiện của nó.</para>
+        <para id="id21392505">Nếu ta không sử dụng chốt hoặc tháo chốt hạng mục dữ liệu ngay khi có thể sau đọc hoặc viết hạng mục, ta có thể rơi vào trạng thái không nhất quán. Mặt khác, nếu ta không tháo chốt một hạng mục dữ liệu trước khi yêu cầu một chốt trên một hạng mục khác, dealock có thể xảy ra. Có các phương pháp tránh dealock trong một số tình huống, tuy nhiên nói chung dealock là khó tránh khi sử dụng chốt nếu ta muốn tránh trạng thái không nhất quán. Dealock được ưa thích hơn trạng thái không nhất quán vì chúng có thể điều khiển được bằng cách cuộn lại các giao dịch trong khi đó trạng thái không nhất quán có thể dẫn đến các vấn đề thực tế mà hệ CSDL không thể điều khiển.</para>
+        <para id="id21392539">Ta sẽ yêu cầu mỗi giao dịch trong hệ thống tuân theo một tập các quy tắc , được gọi là giao thức chốt (locking protocol), chỉ định khi một giao dịch có thể chốt và tháo chốt mỗi một trong các hạng mục dự liệu. Giao thức chốt hạn chế số các lịch trình có thể. Tập các lịch trình như vậy là một tập con thực sự của tập tất cả các lịch trình khả tuần tự có thể. </para>
+        <para id="id21392545">Xét { T0 , T1 , ..., Tn } một tập các giao dịch tham gia vào lịch trình S. Ta nói Ti đi trước Tj trong S, và được viết là Ti  Tj , nếu tồn tại một hạng mục dữ liệu Q sao cho Ti giữ chốt phương thức A trên Q , Tj giữ chốt phương thức B trên Q muộn hơn và comp(A,B) = false. Nếu Ti  Tj , thì Ti sẽ xuất hiện trước Tj trong bất kỳ lịch trình tuần tự nào. </para>
+        <para id="id21199228">Ta nói một lịch trình S là hợp lệ dưới một giao thức chốt nếu S là một lịch trình tuân thủ các quy tắc của giao thức chốt đó. Ta nói rằng một giao thức chốt đảm bảo tính khả tuần tự xung đột nếu và chỉ nếu đối với tất cả các lịch trình hợp lệ, quan hệ  kết hợp là phi chu trình.</para>
+      </section>
+      <section id="id-584268820177">
+        <title>CẤP CHỐT</title>
+        <para id="id21199262">Khi một giao dịch yêu cầu một chốt trên một hạng mục dữ liệu ở một phương thức và không có một giao dịch nào khác giữ một chốt trên cùng hạng mục này ở một phương thức xung đột, chốt có thể được cấp. Tuy nhiên, phải thận trọng để tránh kịch bản sau: giả sử T2 giữ một chốt phương thức shared trên một hạng mục dữ liệu, một giao dịch khác T1 yêu cầu một chốt phương thức exclusive cũng trên hạng mục này, rõ ràng T1 phải chờ T2 tháo chốt. Trong khi đó một giao dịch khác T3 yêu cầu một chốt phương thức shared, do yêu cầu chốt này tương thích với phương thức chốt được giữ bởi T1 nên nó được cấp cho T3. Tại thời điểm T2 tháo chốt, T1 vẫn phải chờ sự tháo chốt của T3, nhưng bây giờ lại có một giao dịch T4 yêu cầu một chốt phương thức shared và nó lại được cấp do tính tương thích và cứ như vậy, có thể T1 sẽ không bao giờ được cấp chốt mà nó yêu cầu trên hạng mục dữ liệu. Ta gọi hiện tượng này là bị chết đói (starved).</para>
+        <para id="id21199379">Để tránh sự chết đói của các giao dịch, việc cấp chốt được tiến hành như sau: Khi một giao dịch Ti yêu cầu một chốt trên một hạng mục dữ liệu Q ở phương thức M, chốt sẽ được cấp nếu các điều kiện sau được thoả mãn:</para>
+        <list id="id21199397" list-type="enumerated">
+          <item>Không có giao dịch khác đang giữ một chốt trên Q ở phương thức xung đột với M</item>
+          <item>Không có một giao dịch nào đang chờ được cấp một chốt trên M và đã đưa ra yêu cầu về chốt trước Ti </item>
+        </list>
+      </section>
+      <section id="id-794375996804">
+        <title>GIAO THỨC CHỐT HAI KỲ (Two-phase locking protocol)</title>
+        <para id="id21199436">Giao thức chốt hai kỳ là một giao thức đảm bảo tính khả tuần tự. Giao thức này yêu cầu mỗi một giao dịch phát ra yêu cầu chốt và tháo chốt thành hai kỳ:</para>
+        <list id="id21199449" list-type="enumerated">
+          <item>Kỳ xin chốt (Growing phase). Một giao dịch có thể nhận được các chốt, nhưng có không thể tháo bất kỳ chốt nào</item>
+          <item>Kỳ tháo chốt (Shrinking phase). Một giao dịch có thể tháo các chốt nhưng không thể nhận được một chốt mới nào.</item>
+        </list>
+        <para id="id21199481">Khởi đầu, một giao dịch ở kỳ xin chốt. Giao dịch tậu được nhiều chốt như cần thiết. Mỗi khi giao dịch tháo một chốt, nó đi vào kỳ tháo chốt và nó không thể phát ra bất kỳ một yêu cầu chốt nào nữa. Các giao dich T3 và T4 là hai kỳ. Các giao dịch T1 và T2 không là hai kỳ. Người ta có thể chứng minh được giao thức chốt hai kỳ đảm bảo tính khả tuần tự xung đột, nhưng không đảm bảo tránh được dealock và việc cuộn lại hàng loạt. Cuộn lại hàng loạt có thể tránh được bởi một sự sửa đổi chốt hai kỳ được gọi là giao thức chốt hai kỳ nghiêm ngặt. Chốt hai kỳ nghiêm ngặt đòi hỏi thêm tất cả các chốt phương thức exclusive phải được giữ đến tận khi giao dịch bàn giao. Yêu cầu này đảm bảo rằng bất kỳ dữ liệu nào được viết bởi một giao dịch chưa bàn giao bị chốt trong phương thức exclusive đến tận khi giao dịch bàn giao, điều đó ngăn ngừa bất kỳ giao dịch khác đọc dữ liệu này.</para>
+        <para id="id21199561">Một biến thể khác của chốt hai kỳ là giao thức chốt hai kỳ nghiêm khắc. Nó đòi hỏi tất cả các chốt được giữ đến tận khi giao dịch bàn giao. Hầu hết các hệ CSDL thực hiện chốt hai kỳ nghiêm ngặt hoặc nghiêm khắc.</para>
+        <para id="id21199574">Một sự tinh chế giao thức chốt hai kỳ cơ sở dựa trên việc cho phép chuyển đổi chốt: nâng cấp một chốt shared sang exclusive và hạ cấp một chốt exclusive thành chốt shared. Chuyển đổi chốt không thể cho phép một cách tuỳ tiện, nâng cấp chỉ được phép diễn ra trong kỳ xin chốt, còn hạ cấp chỉ được diễn ra trong kỳ tháo chốt. Một giao dịch thử nâng cấp một chốt trên một hạng mục dữ liệu Q có thể phải chờ. Giao thức chốt hai kỳ với chuyển đổi chốt cho phép chỉ sinh ra các lịch trình khả tuần tự xung đột. Nếu các chốt exclusive được giữ đến tận khi bàn giao, các lịch trình sẽ là cascadeless.</para>
+        <para id="id21199608">Ta xét một ví dụ: Các giao dịch T8 và T9 được nêu trong ví dụ chỉ được trình bày bởi các hoạt động ý nghĩa là Read và Write. </para>
+        <para id="id21199658">T8 : Read(A1);</para>
+        <para id="id21199690">Read(A2);</para>
+        <para id="id21199712">...</para>
+        <para id="id21199723">Read(An);</para>
+        <para id="id21199746">Write(A1).</para>
+        <para id="id21199768">T9 : Read(A1);</para>
+        <para id="id21199800">Read(A2);</para>
+        <para id="id21199823">Display(A1 + A2).</para>
+        <para id="id21199854">figure V- </para>
+        <para id="id21199874">Nếu ta sử dụng giao thức chốt hai kỳ, khi đó T8 phải chốt A1 ở phương thức exclusive. Bởi vậy, sự thực hiện cạnh tranh của hai giao dịch rút cuộc trở thành thực hiện tuần tự. Ta thấy rằng T8 cần một chốt exclusive trên A1 chỉ ở cuối sự thực hiện của nó, khi nó write(A1). Như vậy, T8 có thể khởi động chốt A1 ở phương thức shared, và đổi chốt này sang phương thức exclusive sau này. Như vậy ta có thể nhận được tính cạnh tranh cao hơn, vì như vậy T8 và T9 có thể truy xuất đến A1 và A2 đồng thời.</para>
+        <para id="id21199960">Ta biểu thị sự chuyển đổi từ phương thức shared sang phương thức exclusive bởi upgrade và từ phương thức exclusive sang phương thức shared bởi downgrade. Upgrade chỉ được phép xảy ra trong kỳ xin chốt và downgrade chỉ được phép xảy ra trong kỳ tháo chốt. Lịch trình chưa hoàn tất dưới đây cho ta một minh hoạ về giao thức chốt hai kỳ với chuyển đổi chốt.</para>
+        <para id="id21199975">Chú ý rằng một giao dịch thử cập nhật một chốt trên một hạng mục dữ liệu Q có thể buộc phải chờ. Việc chờ bắt buộc này xảy ra khi Q đang bị chốt bởi giao dịch khác ở phương thức shared. </para>
+        <para id="id21199988">Giao thức chốt hai kỳ với chuyển đổi chốt chỉ sinh ra các lịch trình khả tuần tự xung đột, các giao dịch có thể được tuần tự hoá bởi các điểm chốt của chúng. Hơn nữa, nếu các chốt exclusive được giữ đến tận khi kết thúc giao dịch, lịch trình sẽ là cascadeless.</para>
+        <figure id="id21200010">
+          <media id="id44477145" alt=""><image src="../../media/graphics8-e180.png" mime-type="image/png" height="228" width="210"/></media>
+        </figure>
+        <para id="id21200034">Ta mô tả một sơ đồ đơn giản nhưng dược sử dụng rộng rãi để sinh tự động các chỉ thị chốt và tháo chốt thích hợp cho một giao dịch: Mỗi khi giao dich T xuất ra một chỉ thị Read(Q), hệ thống sẽ xuất ra một chỉ thị Lock-S(Q) ngay trước chỉ thị Read(Q). Mỗi khi giao dịch T xuất ra một hoạt động Write(Q), hệ thống sẽ kiểm tra xem T đã giữ một chốt shared nào trên Q hay chưa, nếu đã, nó xuất ra một chỉ thị Upgrade(Q) ngay trước chỉ thị Write(Q), nếu chưa, nó xuất ra chỉ thị Lock-X(Q) ngay trước Write(Q). Tất cả các chốt giao dịch nhận được sẽ được tháo chốt sau khi giao dịch bàn giao hay bỏ dở.</para>
+      </section>
+      <section id="id-496613928553">
+        <title>GIAO THỨC DỰA TRÊN ĐỒ THỊ (Graph-Based Protocol)</title>
+        <para id="id21200128">Ta đã biết, trong trường hợp thiếu vắng các thông tin liên quan đến cách thức các hạng mục dữ liệu được truy xuất, giao thức chốt hai kỳ là cần và đủ để đảm bảo tính khả tuần tự. Nếu ta muốn phát triển các giao thức không là hai kỳ, ta cần các thông tin bổ xung trên cách thức mỗi giao dịch truy xuất CSDL. Có nhiều mô hình khác nhau về lượng thông tin được cung cấp. Mô hình đơn giản nhất đòi hỏi ta phải biết trước thứ tự trong đó các hạng mục dữ liệu sẽ được truy xuất. Với các thông tin như vậy, có thể xây dựng các giao thức chốt không là hai kỳ nhưng vẫn đảm bảo tính khả tuần tự xung đột.</para>
+        <para id="id21200162">Để có được hiểu biết trước như vậy, ta áp đặt một thứ tự bộ phận, ký hiệu , trên tập tất cả các hạng mục dữ liệu D ={ d1 , d2 , ..., dn }. Nếu di  dj , bất kỳ giao dịch nào truy xuất cả di và dj phải truy xuất di trước khi truy xuất dj . Thứ tự bộ phận này cho phép xem D như một đồ thị định hướng phi chu trình, được gọi là đồ thị CSDL (DataBase Graph). Trong phần này, để đơn giản, ta hạn chế chỉ xét các đồ thị là các cây và ta sẽ đưa ra một giao thức đơn giản, được gọi là giao thức cây (tree protocol), giao thức này hạn chế chỉ dùng các chốt exclusive. </para>
+        <para id="id21200256">Trong giao thức cây, chỉ cho phép chỉ thị chốt Lock-X, mỗi giao dịch T có thể chốt một hạng mục dữ liệu nhiều nhất một lần và phải tuân theo các quy tắc sau:</para>
+        <list id="id21200274" list-type="enumerated">
+          <item>Chốt đầu tiên bởi T có thể trên bất kỳ hạng mục dữ liệu nào</item>
+          <item>Sau đó, một hạng mục dữ liệu Q có thể bị chốt bởi T chỉ nếu cha của Q hiện đang bị chốt bởi T</item>
+          <item>Các hạng mục dữ liệu có thể được tháo chốt bất kỳ lúc nào</item>
+          <item>Một hạng mục dữ liệu đã bị chốt và được tháo chốt bởi T, không thể bị T chốt lại lần nữa.</item>
+        </list>
+        <para id="id21200313">Các lịch trình hợp lệ trong giao thức cây là khả tuần tự xung đột. </para>
+        <para id="id21200324">Ví dụ: Cây CSDL là:</para>
+        <figure id="id21200332">
+          <media id="id41173204" alt=""><image src="../../media/graphics9-6421.png" mime-type="image/png" height="277" width="277"/></media>
+        </figure>
+        <para id="id21200356">figure V- </para>
+        <para id="id21200377">Chỉ các chỉ thị chốt và tháo chốt của các giao dịch được trình bày:</para>
+        <para id="id21200386">T10 : Lock-X(B); Lock-X(E); Lock-X(D); Unlock(B); Unlock(E); Lock-X(G); Unlock(D); Unlock(G).</para>
+        <para id="id21200402">T11 : Lock-X(D); Lock-X(H); Unlock(D); Unlock(H).</para>
+        <para id="id21200418">T12 : Lock-X(B); Lock-X(E); Unlock(B); Unlock(E).</para>
+        <para id="id21200434">T13 : Lock-X(D); Lock-X(H); Unlock(D); Unlock(H).</para>
+        <para id="id21200450">figure V- </para>
+        <para id="id21200470">Một lịch trình tuân theo giao thức cây chứa tất cả bốn giao dịch trên được cho trong hình bên dưới. Ta nhận thấy, các lịch trình tuân thủ giao thức cây không chỉ là khả tuần tự xung đột mà còn đảm bảo không có dealock. Giao thức cây có mặt thuận lợi so với giao thức hai kỳ là tháo chốt có thể xảy ra sớm hơn. Việc tháo chốt sớm có thể dẫn đến rút ngắn thời gian chờ đợi và tăng tính cạnh tranh. Hơn nữa, do giao thức là không dealock, nên không có cuộn lại. Tuy nhiên giao thức cây có điểm bất lợi là, trong một vài trường hợp, một giao dịch có thể phải chốt những hạng mục dữ liệu mà nó không truy xuất. Chẳng hạn, một giao dịch cần truy xuất các hạng mục dữ liệu A và J trong đồ thị CSDL trên, phải chốt không chỉ A và J mà phải chốt cả các hạng mục B, D, H. Việc chốt bổ xung này có thể gây ra việc tăng tổng phí chốt, tăng thời gian chờ đợi và giảm tính cạnh tranh. Hơn nữa, nếu không biết trước các hạng mục dữ liệu nào sẽ cần thiết phải chốt, các giao dịch sẽ phải chốt gốc của cây mà điều này làm giảm mạnh tính cạnh tranh. </para>
+        <para id="id21200506">Đối với một tập các giao dịch, có thể có các lịch trình khả tuần tự xung đột không thể nhận được từ việc tuân theo giao thức cây. Có các lịch trình được sinh ra bởi tuân theo giao thức chốt hai kỳ nhưng không thể được sinh ra bởi tuân theo giao thức cây và ngược lại.</para>
+        <table id="id21200522" summary="">
+          <tgroup cols="4">
+            <colspec colnum="1" colname="c1"/>
+            <colspec colnum="2" colname="c2"/>
+            <colspec colnum="3" colname="c3"/>
+            <colspec colnum="4" colname="c4"/>
+            <tbody>
+              <row>
+                <entry>T10</entry>
+                <entry>T11</entry>
+                <entry>T12</entry>
+                <entry>T13</entry>
+              </row>
+              <row>
+                <entry>Lock-X(B)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Lock-X(D)</entry>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Lock-X(H)</entry>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Unlock(D)</entry>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Lock-X(E)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Lock-X(D)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Unlock(B)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Unlock(E)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry>Lock-X(B)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry>Lock-X(E)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Unlock(H)</entry>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Lock-X(G)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry>Unlock(D)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry/>
+                <entry>Lock-X(D)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry/>
+                <entry>Lock-X(H)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry/>
+                <entry>Unlock(D)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry/>
+                <entry>Unlock(H)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry>Unlock(E)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry/>
+                <entry>Unlock(B)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry>Unlock(G)</entry>
+                <entry/>
+                <entry/>
+                <entry/>
+              </row>
+              <row>
+                <entry namest="c1" nameend="c4">Lịch trình khả tuần tự dưới giao thức cây</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <para id="id21415558">figure V- </para>
+      </section>
+      <section id="id-418294682904">
+        <title>ĐA HẠT (Multiple Granularity)</title>
+        <para id="id21415586">Trong các sơ đồ điều khiển cạnh tranh được mô tả trước đây, ta đã sử dụng hạng mục dữ liệu như đơn vị trên nó sự đồng bộ hoá được thực hiện. Tuy nhiên, có các hoàn cảnh trong đó việc nhóm một vài hạng mục dữ liệu và xử lý chúng như một đơn vị đồng bộ hoá mang lại nhiều lợi ích. Nừu một giao dich Ti phải truy xuất toàn bộ CSDL và giao thức chốt được sử dụng, khi đó Ti phải chốt mỗi hạng mục dữ liệu trong CSDL. Như vậy việc thực hiện các chốt này sẽ tiêu tốn một thời gian đáng kể. Sẽ hiệu quả hơn nếu Ti chỉ cần một yêu cầu chốt để chốt toàn bộ CSDL. Mặt khác, nếu Ti cần truy xuất chỉ một vài hạng mục dữ liệu, nó không cần thiết phải chốt toàn bộ CSDL vì như vậy sẽ giảm tính cạnh tranh. Như vậy, cái mà ta cần là một cơ chế cho phép hệ thống xác định nhiều mức hạt. Một cơ chế như vậy là cho phép các hạng mục dữ liệu có kích cỡ khác nhau và xác định một sự phân cấp các hạt dữ liệu, trong đó các hạt nhỏ được ẩn náu bên trong các hạt lớn. Sự phân cấp như vậy có thể được biểu diễn đồ thị như một cây. Một nút không là lá của cây đa hạt biểu diễn dữ liệu được kết hợp với con cháu của nó. Như một ví dụ minh hoạ, ta xét cây sau:</para>
+        <figure id="id21415663">
+          <media id="id49473924" alt=""><image src="../../media/graphics10-0bb3.png" mime-type="image/png" height="192" width="569"/></media>
+        </figure>
+        <para id="id21415686">figure V- </para>
+        <para id="id21415707">Nó gồm bốn mức nút. Mức cao nhất là toàn bộ CSDL. Thấp hơn là các nút kiểu vùng: CSDL bao gồm các vùng này. Mỗi vùng lại có các nút kiểu file như các con của nó, mỗi vùng chứa đúng các file này và không file nào nằm trong nhiều hơn một vùng. Cuối cùng, mỗi file có các nút con kiểu mẩu tin, không mẩu tin nào hiện diện trong hơn một file.</para>
+        <para id="id21415721">Mỗi nút trong cây có thể được chốt một các cá nhân. Như đã làm trong giao thức chốt hai kỳ, ta sẽ sử dụng các phương thức chốt shared và exclusive . Khi một giao dịch chốt một nút, trong phương thức shared hoặc exclusive, giao dịch cũng chốt tất cả các nút con cháu của nút này ở cùng phương thức. Ví dụ Ti chốt tường minh file Fb ở phương thức exclusive, nó đã chốt ẩn tất cả các mẩu tin của Fb cũng trong phương thức exclusive.</para>
+        <para id="id21415781">Giả sử giao dịch Tj muốn chốt mẩu tin Rb6 của file Fb. vì giao địch Ti đã chốt tường minh file Fb, mẩu tin Rb6 cũng bị chốt ẩn. Song làm thế nào để hệ thống biết được Tj có thể chốt Rb6 hay không: Tj phải duyệt cây từ gốc đến mẩu tin Rb6 , nếu có một nút bất kỳ tren đường dẫn bị chốt ở phương thức không tương thích, Tj phải chờ. Bây giờ, nếu Tk muốn chốt toàn bộ CSDL, nó phải chốt nút gốc. Tuy nhiên, do Ti hiện đang giữ một chốt trên Fb, một bộ phận của cây, nên Tk sẽ không thành công. Vậy làm thế nào để hệ có thể chốt được nút gốc: Một khả năng là tìm kiếm trên toàn bộ cây, giải pháp này phá huỷ hoàn toàn sơ đồ mục đích của sơ đồ chốt đa hạt. Một giải pháp hiệu quả hơn là đưa vào một lớp mới các phương thức chốt, được gọi là phương thức chốt tăng cường (intension lock mode). Nếu một nút bị chốt ở phương thức tăng cường, chốt tường minh được tiến hành ở mức thấp hơn của cây (hạt min hơn). Chốt tăng cường được được đặt trên tất cả các tổ tiên của một nút trước khi nút đó được chốt tường minh. Như vậy một giao dịch không cần thiết phải tìm kiếm toàn bộ cây để xác định nó có thể chốt một nút thành công hay không. Một giao dịch muốn chốt một nút, chẳng hạn Q, phải duyệt một đường dẫn từ gốc đến Q, trong khi duyệt cây, giao dịch chốt các nút trên đường đi ở phương thức tăng cường.</para>
+        <para id="id21415918">Có một phương thức tăng cường kết hợp với phương thức shared và một với phương thức exclusive. Nếu một nút bị chốt ở phương thức tăng cường shared (IS), chốt tường minh được tiến hành ở mức thấp hơn trong cây, nhưng chỉ là một các chốt phương thức shared. Tương tự, nếu một nút bị chốt ở phương thức tăng cường exclusive (IX), chốt tường minh được tiến hành ở mức thấp hơn với các chốt exclusive hoặc shared. Nếu một nút bị chốt ở phương thức shared và phương thức tăng cường exclusive (SIX), cây con có gốc là nút này bị chốt tường minh ở phương thức shared và chốt tường minh được tiến hành ở mức thấp hơn với các chốt exclusive. Hàm tính tương thích đối với các phương thức chốt này được cho bởi ma trận:</para>
+        <table id="id21415964" summary="">
+          <tgroup cols="6">
+            <colspec colnum="1" colname="c1"/>
+            <colspec colnum="2" colname="c2"/>
+            <colspec colnum="3" colname="c3"/>
+            <colspec colnum="4" colname="c4"/>
+            <colspec colnum="5" colname="c5"/>
+            <colspec colnum="6" colname="c6"/>
+            <tbody>
+              <row>
+                <entry/>
+                <entry>IS</entry>
+                <entry>IX</entry>
+                <entry>S</entry>
+                <entry>SIX</entry>
+                <entry>X</entry>
+              </row>
+              <row>
+                <entry>IS</entry>
+                <entry>True</entry>
+                <entry>True</entry>
+                <entry>True</entry>
+                <entry>True</entry>
+                <entry>False</entry>
+              </row>
+              <row>
+                <entry>IX</entry>
+                <entry>True</entry>
+                <entry>True</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+              </row>
+              <row>
+                <entry>S</entry>
+                <entry>True</entry>
+                <entry>False</entry>
+                <entry>True</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+              </row>
+              <row>
+                <entry>SIX</entry>
+                <entry>True</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+              </row>
+              <row>
+                <entry>X</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+                <entry>False</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <para id="id21416356">figure V- </para>
+        <para id="id21416376">Giao thức chốt đa hạt dưới đây đảm bảo tính khả tuần tự. Mỗi giao địch T có thể chốt một nút Q theo các quy tắc sau:</para>
+        <list id="id21416386" list-type="enumerated">
+          <item>Hàm tương thích chốt phải được kiểm chứng </item>
+          <item>Gốc của cây phải được chốt đầu tiên, và có thể được chốt ở bất kỳ phương thức nào</item>
+          <item>Một nút Q có thể được chốt bởi T ở phương thức S hoặc IS chỉ nếu cha của Q hiện đang bị chốt bởi T ở hoặc phương thức IX hoặc phương thức IS.</item>
+          <item>Một nút Q có thể được chốt bởi T ở phương thức X, SIX hoặc IX chỉ nếu cha của Q hiện đang bị chốt ở hoặc phương thức IX hoặc phương thức SIX</item>
+          <item>T có thể chốt một nút chỉ nếu trước đó nó chưa tháo chốt một nút nào.</item>
+          <item>T có thể tháo chốt một nút Q chỉ nếu không con nào của Q hiện đang bị chốt bởi T </item>
+        </list>
+        <para id="id21416447">Ta thấy rằng giao thức đa hạt yêu cầu các chốt được tậu theo thứ tự Top-Down, được tháo theo thứ tự Bottom-Up.</para>
+        <para id="id21416461">Ví dụ: Xét cây phân cấp hạt như trên và các giao dịch sau:</para>
+        <list id="id21416467" list-type="bulleted">
+          <item>Giả sử giao dịch T18 đọc mẩu tin Ra2 của file Fa. Khi đó T18 cần phải chốt DB, vùng A1 và Fa ở phương thức IS và Ra2 ở phương thức S: Lock-IS(DB); Lock-IS(A1); Lock-IS(Fa); lock-S(Ra2) </item>
+          <item>Giả sử giao dịch T19 sửa đổi mẩu tin Ra9 trong file Fa , khi đó T19 cần phải chốt CSDL, vùng A1 và file Fa ở phương thức IX và Ra9 ở phương thức X: Lock-IX(DB); Lock-IX(A1); lock-IX(Fa); lock-X(Ra9)</item>
+          <item>Giả sử giao dịch T20 đọc tất cả các mẩu tin của file Fa , khi đó T20 cần phải chốt CSDL, và vùng A1 ở phương thức IS và chốt Fa ở phương thức S: Lock-IS(DB); Lock-IS(A1); Lock-S(Fa)</item>
+          <item>Giả sử giao dịch T21 đọc toàn bộ CSDL, nó có thể làm điều đó sau khi chốt CSDL ở phương thức S: Lock-S(DB) </item>
+        </list>
+        <para id="id21416732">Chú ý rằng T18, T20 và T21 có thể truy xuất đồng thời CSDL, giao dịch T19 có thể thực hiện cạnh tranh với T18 nhưng không với T20 hoặc T21 </para>
+      </section>
+    </section>
+    <section id="id-278484230701">
+      <title>GIAO THỨC DỰA TRÊN TEM THỜI GIAN (Timestamp-based protocol)</title>
+      <section id="id-270799757783">
+        <title>TEM THỜI GIAN (Timestamp)</title>
+        <para id="id21416798">Ta kết hợp với mỗi giao dịch Ti trong hệ thống một tem thời gian cố định duy nhất, được biểu thị bởi TS(Ti). Tem thời gian này được gán bởi hệ CSDL trước khi giao dịch Ti bắt đầu thực hiện. Nếu một giao dịch Ti đã được gán tem thời gian TS(Ti) và một giao dịch mới Tj đi vào hệ thống, khi đó TS(Ti) &lt; TS(Tj). Có hai phương pháp đơn giản để thực hiện sơ đồ này:</para>
+        <list id="id21416862" list-type="enumerated">
+          <item>Sử dụng giá trị của đồng hồ hệ thống như tem thời gian: Một tem thời gian của một giao dịch bằng giá trị của đồng hồ khi giao dịch đi vào hệ thống.</item>
+          <item>Sử dụng bộ đếm logic: bộ đếm được tăng lên mỗi khi một tem thời gian đã được gán, tem thời gian của một giao dịch bằng với giá trị của bộ đếm khi giao dich đi vào hệ thống. </item>
+        </list>
+        <para id="id21416892">Tem thời gian của các giao dịch xác định thứ tự khả tuần tự. Như vậy, nếu TS(Ti) &lt; TS(Tj), hệ thống phải đảm bảo rằng lịch trình được sinh ra là tương đương với một lịch trình tuần tự trong đó Ti xuất hiện trước Tj . </para>
+        <para id="id21416944">Để thực hiện sơ đồ này, ta kết hợp với mỗi hạng mục dữ liệu Q hai giá trị tem thời gian:</para>
+        <list id="id21416951" list-type="bulleted">
+          <item>W-timestamp(Q) biểu thị tem thời gian lớn nhất của giao dịch bất kỳ đã thực hiện Write(Q) thành công</item>
+          <item>R-timestamp(Q) biểu thị tem thời gian lớn nhất của giao dịch bất kỳ đã thực hiện Read(Q) thành công</item>
+        </list>
+        <para id="id21416992">Các tem thời gian này được cập nhật mỗi khi một Write hoặc một Read mới được thực hiện. </para>
+      </section>
+      <section id="id-770542278591">
+        <title>GIAO THỨC THỨ TỰ TEM THỜI GIAN (Timestamp-Ordering Protocol)</title>
+        <para id="id21417021">Giao thức thứ tự tem thời gian đảm bảo rằng các Write và Read xung đột bất kỳ được thực hiện theo thứ tự tem thời gian. Giao thức này hoạt động như sau:</para>
+        <list id="id21417045" list-type="enumerated">
+          <item>Giả sử giao dịch Ti phát ra Read(Q).</item>
+        </list>
+        <list id="id21417066" list-type="bulleted">
+          <item>Nếu TS(Ti) &lt; W-Timestamp(Q), Ti cần đọc một giá trị của Q đã được viết rồi. Do đó, hoạt động Read bị vứt bỏ và Ti bị cuộn lại.</item>
+          <item>Nếu TS(Ti)  W-Timestamp(Q), hoạt động Read được thực hiện và R-Timestamp được đặt bằng giá trị lớn nhất trong hai giá trị R-Timestamp và TS(Ti).</item>
+        </list>
+        <para id="id21417161">Giả sử giao dịch Ti phát ra Write(Q).</para>
+        <list id="id21417177" list-type="bulleted">
+          <item>Nếu TS(Ti) &lt; R-Timestamp(Q), Giá trị của Q mà Ti đang sinh ra được giả thiết là để được dùng cho các giao dịch đi sau nó (theo trình tự thời gian), nhưng nay không cần đến nũa. Do vậy, hoạt động Write này bị vứt bỏ và Ti bị cuộn lại</item>
+          <item>Nếu TS(Ti) &lt; W-Timestamp(Q), Ti đang thử viết một giá trị đã quá hạn của Q, Từ đó, hoạt động Write bị vứt bỏ và Ti bị cuộn lại</item>
+          <item>Ngoài ra, hoạt động Write được thực hiện và W-Timestamp(Q) được đặt là TS(Ti) </item>
+        </list>
+        <para id="id21417274">Một giao dịch Ti bị cuộn lại bởi sơ đồ điều khiển cạnh tranh như kết quả của hoạt động Read hoặc Write đang được phát ra, được gán với một tem thời gian mới và được tái khởi động lại (được xem như một giao dịch mới tham gia vào hệ thống)</para>
+        <para id="id21417306">Ta xét các giao dịch T14 và T15 được xác định như dưới đây:</para>
+        <para id="id21417324">T14 :Read(B);</para>
+        <para id="id21417343">Read(A);</para>
+        <para id="id21417352">Display(A+B);.</para>
+        <para id="id21417363">T15 :Read(B);</para>
+        <para id="id21417382">B:=B-50;</para>
+        <para id="id21417395">Write(B);</para>
+        <para id="id21417405">Read(A);</para>
+        <para id="id21417415">A:=A+50;</para>
+        <para id="id21417424">Write(A);</para>
+        <para id="id21417434">Display(A+B).</para>
+        <para id="id21417445">figure V- </para>
+        <para id="id21417466">Ta giả thiết rằng một giao dịch được gán cho một tem thời gian ngay trước chỉ thị đầu tiên của nó. Như vậy, lịch trình schedule-3 dưới đây có TS(T14) &lt; TS(T15), và là một lịch trình hợp lệ dưới giao thức tem thời gian:</para>
+        <figure id="id21417500">
+          <media id="id45482350" alt=""><image src="../../media/graphics11-6808.png" mime-type="image/png" height="267" width="234"/></media>
+        </figure>
+        <para id="id21417523">Giao thức thứ tự tem thời gian đảm bảo tính khả tuần tự xung đột và không dealock.</para>
+      </section>
+      <section id="id-748563704921">
+        <title>QUY TẮC VIẾT THOMAS (Thomas' Write rule)</title>
+        <para id="id21417541">Một biến thể của giao thức tem thời gian cho phép tính cạnh tranh cao hơn giao thức thứ tự tem thời gian. Trước hết ta xét lịch trình schedule-4 sau:</para>
+        <table id="id21417551" summary="">
+          <tgroup cols="2">
+            <colspec colnum="1" colname="c1"/>
+            <colspec colnum="2" colname="c2"/>
+            <tbody>
+              <row>
+                <entry>T16</entry>
+                <entry>T17</entry>
+              </row>
+              <row>
+                <entry>Read(Q)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Write(Q)</entry>
+              </row>
+              <row>
+                <entry>Write(Q)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry namest="c1" nameend="c2">Schedule-4</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <para id="id21417673">figure V- </para>
+        <para id="id21417694">Nếu áp dụng giao thức thứ tự tem thời gian, ta có TS(T16) &lt; TS(T17). Hoạt dộng Read(Q) của T16 và Write(Q) của T17 thành công, khi T16 toan thực hiện hoạt động Write(Q) của nó, vì TS(T16) &lt; TS(T17) = W-timestamp(Q), nên Write(Q) của T16 bị vứt bỏ và giao dịch T16 bị cuộn lại. Sự cuộn lại này là không cần thiết. Nhận xét này cho ta một sửa đổi phiên bản giao thức thứ tự tem thời gian: </para>
+        <para id="id21417801">Các quy tắc giao thức đối với Read không thay đổi, các quy tắc đối với Write được thay đổi chút ít như sau:</para>
+        <para id="id21417821">Giả sử giao dịch Ti phát ra Write(Q). </para>
+        <list id="id21417838" list-type="enumerated">
+          <item>Nếu TS(Ti) &lt; R-timestamp(Q), Giá trị của Q mà Ti đang sinh ra được giả thiết là để được dùng cho các giao dịch đi sau nó (theo trình tự thời gian), nhưng nay không cần đến nữa. Do vậy, hoạt động Write này bị vứt bỏ và Ti bị cuộn lại.</item>
+          <item>Nếu TS(Ti) &lt; W-timestamp(Q), Ti đang thử viết một giá trị lỗi thời của Q. Do vậy, hoạt động Write này có thể bị bỏ lơ (không được thực hiện, nhưng Ti không bị cuộn lại).</item>
+          <item>Ngoài ra, hoạt động Write được thực hiện và W-timestamp(Q) được đặt là TS(Ti). </item>
+        </list>
+        <para id="id21417940">Sự sửa đổi đối với giao thức thứ tự tem thời gian này được gọi là quy tắc viết Thomas. Quy tắc viết Thomas cho khả năng sinh các lịch trình khả tuần tự mà các giao thức thức trước đây không thể.</para>
+      </section>
+      <section id="id-684683744197">
+        <title>GIAO THỨC DỰA TRÊN TÍNH HỢP LỆ</title>
+        <para id="id21417962">Trong trường hợp đa số các giao dịch trong hệ thống là các giao dịch chỉ đọc (read-only), tỷ suất xung đột giữa các giao dịch là thấp. Như vậy nhiều giao dịch trong chúng thực hiện thiếu sự giám sát của sơ đồ điều khiển cạnh tranh cũng vẫn giữ cho hệ thống ở trạng thái nhất quán. Hơn nữa, một sơ đồ điều khiển cạnh tranh đưa vào một tổng phí đáng kể (cho thực hiện mã lệnh, thời gian chờ của giao dịch ...). Việc tìm một sơ đổ với tổng phí nhỏ là một mục tiêu. Nhưng khó khăn là ta phải biết trước những giao dịch sẽ bị dính líu vào một xung đột. Để có được các hiểu bét đó, ta cần một sơ đồ để giám sát hệ thống.</para>
+        <para id="id21417996">Ta giả thiết rằng mỗi giao dịch Ti , trong thời gian sống của nó, thực hiện trong hai hoặc ba kỳ khác nhau, phụ thuộc vào nó là một giao dịch chỉ đọc hay là một giao dịch cập nhật. Các kỳ này, theo thứ tự, là như sau:</para>
+        <list id="id21418016" list-type="enumerated">
+          <item>Kỳ đọc. Trong kỳ này, các giá trị của các hạng mục dữ liệu khác nhau được đọc vào các biến cục bộ của Ti . Tất cả các hoạt động Write được thực hiện trên các biến cục bộ tạm, không cập nhật CSDL hiện hành. </item>
+          <item>Kỳ hợp lệ. Giao dịch Ti thực hiện một phép kiểm thử sự hợp lệ để xác định xem nó có thể sao chép đến CSDL các biến cục bộ tạm chứa các kết quả của các hoạt Write mà không vi phạm tính khả tuần tự xung đột hay không.</item>
+          <item>Kỳ viết. Nếu Ti thành công trong kỳ hợp lệ, các cập nhật hiện hành được áp dụng vào CSDL, nếu không Ti bị cuộn lại.</item>
+        </list>
+        <para id="id21418105">Mỗi giao dịch phải trải qua ba kỳ theo thứ tự trên, tuy nhiên, ba kỳ của các giao dịch đang thực hiện cạnh tranh có thể đan xen nhau. </para>
+        <para id="id21418115">Các kỳ đọc và kỳ viết tự nó đã rõ ràng. Chỉ có kỳ hợp lệ là cần thảo luận thêm. Để thực hiện kiểm thử sự hợp lệ, ta cần biết khi nào các kỳ khác nhau của giao dịch Ti xảy ra. Do vậy, ta sẽ kết hợp ba tem thời gian với giao dịch Ti :</para>
+        <list id="id21418144" list-type="enumerated">
+          <item>Start(Ti). Thời gian khi Ti bắt đầu sự thực hiện.</item>
+          <item>Validation(Ti). Thời gian khi Ti kết thúc kỳ đọc và khởi động kỳ hợp lệ.</item>
+          <item>Finish(Ti). Thời gian khi Ti kết thúc kỳ viết.</item>
+        </list>
+        <para id="id21418224">Ta xác định thứ tự khả tuần tự bởi kỹ thuật thứ tự tem thời gian sử dụng giá trị tem thời gian Validation(Ti). Như vậy, giá trị TS(Ti) = Validation(Ti) và nếu TS(Tj) &lt; TS(Tk) thì bất kỳ lịch trình nào được sinh ra phải tương đương với một lịch trình tuần tự trong đó giao dịch Ti xuất hiẹn trước giao dịch Tk . Lý dota chọn Validation(Ti) như tem thời gian của Ti , mà không chọn Start(Ti), là vì ta hy vọng thời gian trả lời sẽ nhanh hơn. </para>
+        <para id="id21418308">Phép kiểm thử hợp lệ đối với Tj đòi hỏi rằng, đối với mỗi giao dịch Ti với TS(Ti) &lt; TS(Tj), một trong các điều kiện sau phải được thoả mãn:</para>
+        <list id="id21418342" list-type="enumerated">
+          <item>Finish(Ti) &lt; Start(Tj). Do Ti hoàn tất sự thực hiện của nó trước khi Tj bắt đầu, thứ tự khả tuần tự được duy trì.</item>
+          <item>Tập các hạng mục dữ liệu được viết bởi Ti không giao với tập các hạng mục dữ liệu được đọc bởi Tj và Ti hoàn tất kỳ viết của nó trước khi Tj bắt đầu kỳ hợp lệ (Start(Tj) &lt; Finish(Ti) &lt; Validation(Tj)). Điều kiện này đảm bảo rằng các viết của Ti và Tj là không chồng chéo. Do các viết của Ti không ảnh hưởng tới đọc của Tj và do Tj không thể ảnh hưởng tới đọc của Ti , thứ tự khả tuần tự được duy trì.</item>
+        </list>
+        <para id="id21399194">Lịch trình schedule-5 cho ta một minh hoạ về giao thức dựa trên tính hợp lệ:</para>
+        <table id="id21399202" summary="">
+          <tgroup cols="2">
+            <colspec colnum="1" colname="c1"/>
+            <colspec colnum="2" colname="c2"/>
+            <tbody>
+              <row>
+                <entry>T14</entry>
+                <entry>T15</entry>
+              </row>
+              <row>
+                <entry>Read(B)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Read(B)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry>B:=B-50</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry>Read(A)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry>A:=A+50</entry>
+              </row>
+              <row>
+                <entry>Read(A)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry>Xác nhận tính hợp lệ</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry>Display(A+B)</entry>
+                <entry/>
+              </row>
+              <row>
+                <entry/>
+                <entry>Xác nhận tính hợp lệ</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry>Write(B)</entry>
+              </row>
+              <row>
+                <entry/>
+                <entry>Write(A)</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <para id="id21399460">figure V- </para>
+        <para id="id21399480">Sơ đồ hợp lệ tự động canh chừng việc cuộn lại hàng loạt, do các Write hiện tại xảy ra chỉ sau khi giao dịch phát ra Write đã bàn giao.</para>
+      </section>
+    </section>
+    <section id="id-185098309089">
+      <title>CÁC SƠ ĐỒ ĐA PHIÊN BẢN (Multiversion Schemes)</title>
+      <para id="id21399512">Các sơ đồ điều khiển cạnh tranh được thảo luận trước đây đảm bảo tính khả tuần tự hoặc bởi làm trễ một hoạt động hoặc bỏ dở giao dịc đã phát ra hoạt động đó. Chẳng hạn, một hoạt động Read có thể bị làm trễ vì giá trị thích hợp còn chưa được viết hoặc nó có thể bị vứt bỏ vì giá trị mà nó muốn đọc đã bị viết đè rồi. Các khó khăn này có thể được che đi nếu bản sao cũ của mỗi hạng mục dữ liệu được giữ trong một hệ thống.</para>
+      <para id="id21399541">Trong các hệ CSDL đa phiên bản, mỗi hoạt động Write(Q) tạo ra một bản mới của Q. Khi một hoạt động Read(Q) được phát ra, hệ thống chọn lựa một trong các phiên bản của Q để đọc. Sơ đồ điều khiển cạnh tranh phải đảm bảo rằng việc chọn lựa này được tiến hành sao cho tính khả tuần tự được đảm bảo. Do lý do hiệu năng, một giao dịch phải có khả năng xác định dễ dàng và mau chóng phiên bản dhạng mục dữ liệu sẽ đọc.</para>
+      <section id="id-0834171110076">
+        <title>THỨ TỰ TEM THỜI GIAN ĐA PHIÊN BẢN</title>
+        <para id="id21399579">Kỹ thuật chung được dùng trong các sơ đồ đa phiên bản là tem thời gian. Ta kết hợp với một giao dịch một tem thời gian tĩnh duy nhất, ký hiệu TS(Ti). Tem thời gian này được gán trước khi khi giao dịch bắt đầu sự thực hiện. Mỗi hạng mục dữ liệu Q kết hợp với một dãy &lt;Q1, Q2, ... , Qm&gt; mỗi phiên bản Qk chứa ba trường dữ liệu:</para>
+        <list id="id21399663" list-type="bulleted">
+          <item>Content là giá trị của phiên bản Qi </item>
+          <item>W-timestamp(Qk) là tem thời gian của giao dịch đã tạo ra phiên bản Qk </item>
+          <item>R-timestamp(Qk) là tem thời gian lớn nhất của giao dịch đã đọc thành công phiên bản Qk </item>
+        </list>
+        <para id="id21399827">Một giao dịch, gọi là Ti , tạo ra phiên bản Qk của hạng mục dữ liệu Q bằng cách phát ra một hoạt động Write(Q). Trường Content của phiên bản chứa giá trị được viết bởi Ti . W-timestamp và R-timestamp được khởi động là TS(Ti). Giá trị R-timestamp được cập nhật mỗi khi một giao dịch Tj đọc nội dung của Qk và R-timestamp(Qk) &lt; TS(Tj).</para>
+        <para id="id21399991">Sơ đồ tem thời gian đa phiên bản dưới đây sẽ đảm bảo tính khả tuần tự. Sơ đồ hoạt động như sau: giả sử Tj phát ra một hoạt động Read(Q) hoặc Write(Q). Qk ký hiệu phiên bản của Q, tem thời gian viết của nó là tem thời gian viết lớn nhất nhỏ hơn hoặc bằng TS(Tj).</para>
+        <list id="id21400056" list-type="enumerated">
+          <item>Nếu giao dịch Tj phát ra một Read(Q), khi đó giá trị trả lại là nội dung của phiên bản Qk </item>
+          <item>Nếu Tj phát ra một Write(Q) và nếu TS(Tj) &lt; R-timestamp(Qk) khi đó giao dịch Tj bị cuộn lại. Nếu không, nếu TS(Tj) = W-timestamp(Qk) nội dung của Qk bị viết đè, khác đi một phiên bản mới của Q được tạo. </item>
+        </list>
+        <para id="id21400209">Các phiên bản không còn được dùng đến nữa bị xoá đi dựa trên quy tắc sau: Giả sử có hai phiên bản Qi và Qj của một hạng mục dữ liệu và cả hai phiên bản này cùng có W-timestamp nhỏ hơn tem thời gian của giao dịch già nhất trong hệ thống, khi đó phiên bản già hơn trong hai phiên bản Qi và Qj sẽ không còn được dùng nữa và bị xoá đi. </para>
+        <para id="id21400304">Sơ đồ thứ tự tem thời gian đa phiên bản có tính chất hay đó là một yêu cầu Read không bao giờ thất bại và không phải chờ đợi. Trong một hệ thống mà hoạt động Read xảy ra nhiều hơn Write cái lợi này là đáng kể. Tuy nhiên có vài điều bất lợi của sơ đồ này là: thứ nhất đọc một hạng mục dữ liệu cũng đòi hỏi cập nhật trường R-timestamp, thứ hai là xung đột giữa các giao dịch được giải quyết bằng cuộn lại.</para>
+      </section>
+      <section id="id-369163151365">
+        <title>CHỐT HAI KỲ ĐA PHIÊN BẢN</title>
+        <para id="id21400375">Giao thức chốt hai kỳ đa phiên bản cố gắng tổ hợp những ưu điểm của điều khiển cạnh tranh với các ưu điểm của chốt hai kỳ. Giao thức này phân biệt các giao dịch chỉ đọc và các giao dịch cập nhật. </para>
+        <para id="id21400409">Các giao dịch cập nhật thực hiện chốt hai kỳ nghiêm khắc (các chốt được giữ đến tận khi kết thúc giao dịch). Mỗi hạng mục dữ liệu có một tem thời gian. Tem thời gian trong trường hợp này không là tem thời gian dựa trên đồng hồ thực mà là một bộ đếm, sẽ được gọi là TS-counter.</para>
+        <para id="id21400454">Các giao dịch chỉ đọc được gán tem thời gian là giá trị hiện hành của TS-counter trước khi chúng bắt đầu sự thực hiện: chúng tuân theo giao thức thứ tự tem thời gian đa phiên bản để thực hiện đọc. Như vậy, khi một giao dịch chỉ đọc Ti phát ra một Read(Q), giá trị trả lại là nội dung của phiên bản mà tem thời gian của nó là tem thời gian lớn nhất nhỏ hơn TS(Ti).</para>
+        <para id="id21400514">Khi một giao dịch cập nhật đọc một hạng mục, nó tậu một chốt shared trên hạng mục, rồi đọc phiên bản mới nhất của hạng mục (đối với nó). Khi một giao dịch cập nhật muốn viết một hạng mục, đầu tiên nó tậu một chốt exclusive trên hạng mục này, rồi tạo ra một phiên bản mới cho hạng mục. Write được thực hiện trên phiên bản mới này và tem thời gian của phiên bản mới được khởi động là +.</para>
+        <para id="id21400574">Khi một giao dịch cập nhật Ti hoàn tất các hoạt động của nó, nó thực hiện xử lý bàn giao như sau: Đầu tiên, Ti đặt tem thời gian trên mỗi phiên bản nó đã tạo là TS-counter+1; sau đó Ti tăng TS-counter lên 1. Chỉ một giao dịch cập nhật được phép thực hiện xử lý bàn giao tại một thời điểm.</para>
+        <para id="id21400620"> Các phiên bản bị xoá cùng kiểu cách với thứ tự tem thời gian đa phiên bản.</para>
+      </section>
+    </section>
+    <section id="id-793309528894">
+      <title>QUẢN TRỊ DEADLOCK</title>
+      <para id="id21400638">Một hệ thống ở trạnh thái deadlock nếu tồn tại một tập hợp các giao dịch sao cho mỗi giao dịch trong tập hợp đang chờ một giao dịch khác trong tạp hợp. Chính xác hơn, tồn tại một tập các giao dịch { T0 , T2 , ..., Tn } sao cho T0 đang chờ một hạng mục dữ liệu được giữ bởi T1 , T1 đang chờ một hạng mục dữ liệu đang bị chiếm bởi T2 , ..., Tn-1 đang chờ một hạng mục dữ liệu được giữ bởi Tn và Tn đang chờ một hạng mục T0 đang chiếm. Không một giao dịch nào có thể tiến triển được trong tình huống như vậy. Một cách chữa trị là viện dẫn một hành động tẩy rửa, chẳng hạn cuộn lại một vài giao dịch tham gia vào deadlock. </para>
+      <para id="id21400731">Có hai phương pháp chính giải quyết vấn đề deadlock: Ngăn ngừa deadlock, phát hiện deadlock và khôi phục. Giao thức ngăn ngừa deadlock đảm bảo rằng hệ thống sẽ không bao giờ đi vào trạng thái deadlock. Sơ đồ phát hiện deadlock và khôi phục (deadlock-detection and deadlock-recovery scheme) cho phép hệ thống đi vào trạng thái deadlock và sau đó cố gắng khôi phục. Cả hai phương pháp đều có thể dẫn đến việc cuộn lại giao dịch. Phòng ngừa deadlock thường được sử dụng nếu xác suất hệ thống đi vào deadlock cao, phát hiện và khôi phục hiệu quả hơn trong các trường hợp còn lại.</para>
+      <section id="id-467194444287">
+        <title>PHÒNG NGỪA DEADLOCK (Deadlock prevention) </title>
+        <para id="id21400769">Có hai cách tiếp cận phòng ngừa deadlock: Một đảm bảo không có chờ đợi vòng tròn xảy ra bằng cách sắp thứ tự các yêu cầu chốt hoặc đòi hỏi tất cả các chốt được tậu cùng nhau. Một cách tiếp cận khác gần hơn với khắc phục deadlock và thực hiện cuộn lại thay vì chờ đợi một chốt. Chờ đợi là tiểm ẩn của deadlock.</para>
+        <para id="id21400785">Sơ đồ đơn giản nhất dưới cách tiếp cận thứ nhất đòi hỏi mỗi giao dịch chốt tất cả các hạng mục dữ liệu trước khi nó bắt đầu thực hiện. Hơn nữa, hoặc tất cả được chốt trong một bước hoặc không hạng mục nào được chốt. Giao thức này có hai bất lợi chính: một là khó dự đoán, trước khi giao dịch bắt đầu, các hạng mục dữ liệu nào cần được chốt, hai là hiệu suất sử dụng hạng mục dữ liệu rất thấp do nhiều hạng mục có thể bị chốt nhưng không được sử dụng trong một thời gian dài.</para>
+        <para id="id21400813">Sơ đồ phòng ngừa deadlock khác là áp đặt một thứ tự bộ phận trên tất cả các hạng mục dữ liệu và yêu cầu một giao dịch chốt một hạng mục dữ liệu theo thứ tự được xác định bởi thứ tự bộ phận này. </para>
+        <para id="id21400828">Cách tiếp cận thứ hai để phòng ngừa deadlock là sử dụng ưu tiên và cuộn lại quá trình. Với ưu tiên, một giao dịch T2 yêu cầu một chốt bị giữ bởi giao dịch T1 , chốt đã cấp cho T1 có thể bị lấy lại và cấp chgo T2 , T1 bị cuộn lại. Để điều khiển ưu tiên, ta gán một tem thời gian duy nhất cho mỗi giao dịch. Hệ thống sử dụng các tem thời gian này để quyết định một giao dịch phải chờ hay cuộn lại. Việc chốt vẫn được sử dụng để điều khiển cạnh tranh. Nếu một giao dịch bị cuộn lại, nó vẫn giữ tem thời gian cũ của nó khi tái khởi động. Hai sơ đồ phòng ngừa deadlock sử dụng tem thời gian khác nhau được đề nghị:</para>
+        <list id="id21400879" list-type="enumerated">
+          <item>Sơ đồ Wait-Die dựa trên kỹ thuật không ưu tiên. Khi giao dịch Ti yêu cầu một hạng mục dữ liệu bị chiếm bởi Tj , Ti được phép chờ chỉ nếu nó có tem thời gian nhỏ hơn của Tj nếu không Ti bị cuộn lại (die).</item>
+          <item>Sơ đồ Wound-Wait dựa trên kỹ thuật ưu tiên. Khi giao dịch Ti yêu cầu một hạng mục dữ liệu hiện đang bị giữ bởi Tj , Ti được phép chờ chỉ nếu nó có tem thời gian lớn hơn của Tj , nếu không Tj bị cuộn lại (Wounded). </item>
+        </list>
+        <para id="id21400978">Một điều quan trọng là phải đảm bảo rằng, mỗi khi giao dịch bị cuộn lại, nó không bị chết đói (starvation) có nghĩa là nó sẽ không bị cuộn lại lần nữa và được phép tiến triển.</para>
+        <para id="id21400991">Cả hai sơ đồ Wound-Wait và Wait-Die đều tránh được sự chết đói: tại một thời điểm, có một giao dịch với tem thời gian nhỏ nhất. Giao dịch này không thể bị yêu cầu cuộn lại trong cả hai sơ đồ. Do tem thời gian luôn tăng và do các giao dịch không được gán tem thời gian mới khi chúng bị cuộn lại, một giao dịch bị cuộn lại sẽ có tem thời gian nhỏ nhất (vào thời gian sau) và sẽ không bị cuộn lại lần nữa.</para>
+        <para id="id21401018">Tuy nhiên, có những khác nhau lớn trong cách thức hoạt động của hai sơ đồ:</para>
+        <list id="id21401026" list-type="bulleted">
+          <item>Trong sơ đồ Wait-Die, một giao dịch già hơn phải chờ một giao dịch trẻ hơn giải phóng hạng mục dữ liệu. Như vậy, giao dịch già hơn có xu hướng bị chờ nhiều hơn. Ngược lại, trong sơ đồ Wound-Wait, một giao dịch già hơn không bao giờ phải chờ một giao dịch trẻ hơn.</item>
+          <item>Trong sơ đồ Wait-Die, nếu một giao dịch Ti chết và bị cuộn lại vì nó đòi hỏi một hạng mục dữ liệu bị giữ bởi giao dịch Tj , khi đó Ti có thể phải tái phát ra cùng dãy các yêu cầu khi nó khởi động lại. Nếu hạng mục dữ liệu vẫn bị chiếm bởi Tj , Ti bị chết lần nữa. Như vậy, Ti có thể bị chết vài lần trước khi tậu được hạng mục dữ liệu cần thiết. Trong sơ đồ Wound-Wait, Giao dịch Ti bị thương và bị cuộn lại do Tj yêu cầu hạng mục dữ liệu nó chiếm giữ. Khi Ti khởi động lại, và yêu cầu hạng mục dữ liệu, bây giờ, đang bị Tj giữ, Ti chờ. Như vậy, có ít cuộn lại hơn trong sơ đồ Wound-Wait. </item>
+        </list>
+        <para id="id21401163">Một vấn đề nổi trội đối với cả hai sơ đồ là có những cuộn lại không cần thiết vẫn xảy ra.</para>
+      </section>
+      <section id="id-83315299526">
+        <title>SƠ ĐỒ DỰA TRÊN TIMEOUT</title>
+        <para id="id21401181">Một cách tiếp cận khác để quản lý deadlock được dựa trên lock timeout. Trong cách tiếp cận này, một giao dịch đã yêu cầu một chốt phải chờ nhiều nhất một khoảng thời gian xác định. Nếu chốt không được cấp trong khoảng thời gian này, giao dịch được gọi là mãn kỳ (time out), giao dịch tự cuộn lại và khởi động lại. Nếu có một deadlock, một hoặc một vài giao dịch dính líu đến deadlock sẽ time out và cuộn lại, để các giao dịch khác tiến triển. Sơ đồ này nằm trung gian giữa phòng ngừa deadlock và phát hiện và khôi phục deadlock.</para>
+        <para id="id21401207">Sơ đồ timeout dễ thực thi và hoạt động tốt nếu giao dịch ngắn và nếu sự chờ đợi lâu là do deadlock. Tuy nhiên, khó quyết định được khoảng thời gian timeout. Sơ đồ này cũng có thể đưa đến sự chết đói. </para>
+      </section>
+      <section id="id-785220402148">
+        <title>PHÁT HIỆN DEADLOCK VÀ KHÔI PHỤC </title>
+        <para id="id21401230">Nếu một hệ thống không dùng giao thức phòng ngừa deadlock, khi đó sơ đồ phát hiện và khôi phục phải được sử dụng. Một giải thuật kiểm tra trạng thái của hệ thống được gọi theo một chu kỳ để xác định xem deadlock có xẩy ra hay không. Nếu có, hệ thống phải khôi phục lại từ deadlock, muốn vậy hệ thống phải:</para>
+        <list id="id21401244" list-type="bulleted">
+          <item>Duy trì thông tin về sự cấp phát hiện hành các hạng mục dữ liệu cho các giao dịch cũng như các yêu cầu hạng mục dữ liệu chưa được chưa được giải quyết.</item>
+          <item>Cung cấp một thuật toán sử dụng các thông tin này để xác định hệ thống đã đi vào trạng thái deadlock chưa.</item>
+          <item>Phục hồi từ deadlock khi phát hiện được deadlock đã xảy ra. </item>
+        </list>
+        <section id="id-541971786292">
+          <title>PHÁT HIỆN DEADLOCK</title>
+          <para id="id21401285">Deadlock có thể mô tả chính xác bằng đồ thị định hướng được gọi là đồ thị chờ (wait for graph). Đồ thị này gồm một cặp G = &lt; V, E &gt;, trong đó V là tập các đỉnh và E là tập các cung. Tập các đỉnh gồm tất cả các giao dịch trong hệ thống. Mỗi phần tử của E là một cặp Ti  Tj , nó chỉ ra rằng Ti chờ Tj giải phóng một hạng mục dữ liệu nó cần. </para>
+          <para id="id21401341">Khi giao dịch Ti yêu cầu một hạng mục dữ liệu đang bị giữ bởi giao dịch Tj khi đó cung Ti  Tj được xen vào đồ thị. Cạnh này bị xoá đi chỉ khi giao dịch Tj không còn giữ hạng mục dữ liệu nào mà Ti cần.</para>
+          <para id="id21401406">Deadlock tồn tại trong hệ thống nếu và chỉ nếu đồ thị chờ chứa một chu trình. Mỗi giao dịch tham gia vào chu trình này được gọi là bị deadlock. Để phát hiện deadlock, hệ thống phải duy trì đồ thị chờ và gọi theo một chu kỳ thủ tục tìm kiếm chu trình. Ta xét ví dụ sau:</para>
+          <figure id="id21401429">
+            <media id="id49869897" alt=""><image src="../../media/graphics12-cc08.png" mime-type="image/png" height="148" width="185"/></media>
+          </figure>
+          <para id="id21401453"/>
+          <para id="id21401459"> Đồ thị chờ (phi chu trình)</para>
+          <para id="id21401474">figure V- </para>
+          <para id="id21401494">Do đồ thị không có chu trình nên hệ thông không trong trạng thái deadlock. Bây giờ, giả sử T28 yêu cầu một hạng mục dữ liệu được giữ bởi T27 , cung T28  T27 được xen vào đồ thị, điều này dẫn đến tồn tại một chu trình T26  T27  T28  T26 có nghĩa là hệ thống rơi vào tình trạng deadlock và T26 , T27 , T28 bị deadlock.</para>
+          <figure id="id21401643">
+            <media id="id43705427" alt=""><image src="../../media/graphics13-f089.png" mime-type="image/png" height="146" width="194"/></media>
+          </figure>
+          <para id="id21401666">figure V- </para>
+          <para id="id21401687">Vấn đề đặt ra là khi nào thì chạy thủ tục phát hiện ? câu trả lời phụ thuộc hai yêu tố sau:</para>
+          <list id="id21401695" list-type="enumerated">
+            <item>Deadlock thường xảy ra hay không ?</item>
+            <item>Bao nhiêu giao dịch sẽ bị ảnh hưởng bởi deadlock</item>
+          </list>
+          <para id="id21401713">Nếu deadlock thường xảy ra, việc chạy thủ tục phát hiện diễn ra thường xuyên hơn. Các hạng mục dữ liệu được cấp cho các giao dịch bị deadlock sẽ không sẵn dùng cho các giao dịch khác đến khi deadlock bị phá vỡ. Hơn nữa, số chu trình trong đồ thị có thể tăng lên. Trong trường hợp xấu nhất, ta phải gọi thủ tục phát hiện mỗi khi có một yêu cầu cấp phát không được cấp ngay.</para>
+        </section>
+        <section id="id-900093971359">
+          <title>KHÔI PHỤC TỪ DEADLOCK</title>
+          <para id="id21401736">Khi thuật toán phát hiện xác định được sự tồn tại của deadlock, hệ thống phải khôi phục từ deadlock. Giải pháp chung nhất là cuộn lại một vài giao dịch để phá vỡ deadlock. Ba việc cần phải làm là:</para>
+          <list id="id21401755" list-type="enumerated">
+            <item>Chọn nạn nhân. Đã cho một tập các giao dịch bị deadlock, ta phải xác định giao dịch nào phải cuộn lại để phá vỡ deadlock. Ta sẽ cuộn lại các giao dịch sao cho giá phải trả là tối thiểu. Nhiều nhân tố xác định giá của cuộn lại:</item>
+          </list>
+          <list id="id21401785" list-type="enumerated">
+            <item>Giao dịch đã tính toán được bao lâu và bao lâu nữa.</item>
+            <item>Giao dịch đã sử dụng bao nhiêu hạng mục dữ liệu</item>
+            <item>Giao dịch cần bao nhiêu hạng mục dữ liệu nữa để hoàn tất.</item>
+            <item>Bao nhiêu giao dịch bị cuộn lại. </item>
+            <item>Cuộn lại (Rollback). Mỗi khi ta đã quyết định được giao dịch nào phải bị cuộn lại, ta phải xác định giao dịch này bị cuộn lại bao xa. Giải pháp đơn giản nhất là cuộn lại toàn bộ: bỏ dở giao dịch và bắt đầu lại nó. Tuy nhiên, sẽ là hiệu quả hơn nếu chỉ cuộn lại giao dịch đủ xa như cần thiết để phá vỡ deadlock. Nhưng phương pháp này đòi hỏi hệ thống phải duy trì các thông tin bổ xung về trạng thái của tất cả các giao dịch đang chạy.</item>
+            <item>Sự chết đói (Starvation). Trong một hệ thống trong đó việc chọn nạn nhân dựa trên các nhân tố giá, có thể xảy ra là một giao dịch luôn là nạn nhân của việc chọn này và kết quả là giao dịch này không bao giờ có thể hoàn thành. Tình huống này được gọi là sự chết đói. Phải đảm bảo việc chọn nạn nhân không đưa đến chết đói. Một giải pháp xem số lần bị cuộn lại của một giao dịch như một nhân tố về giá.</item>
+          </list>
+          <para id="id21401877">BÀI TẬP CHƯƠNG V</para>
+          <para id="id21401882">V.1Chứng tỏ rằng giao thức chốt hai kỳ đảm bảo tính khả tuần tự xung đột và các giao dịch có thể được làm tuần tự tương ứng với các điểm chốt của chúng.</para>
+          <para id="id21401899">V.2 Xét hai giao dịch sau:</para>
+          <para id="id21401911">T31 :Read(A);</para>
+          <para id="id21401931">Read(B);</para>
+          <para id="id21401942">If A=0 then B:=B+1;</para>
+          <para id="id21401953">Write(B);</para>
+          <para id="id21401964">T­32 :Read(B);</para>
+          <para id="id21401984">Read(A);</para>
+          <para id="id21401995">If B=0 then A:=A+1;</para>
+          <para id="id21402006">Write(A);</para>
+          <para id="id21402017">Thêm các chỉ thị chốt và tháo chốt vào hai giao dịch T31 và T32 sao cho chúng tuân theo giao thức chốt hai kỳ. Sự thực hiện các giao dịch này có thể dẫn đến deadlock ?</para>
+          <para id="id21402040">V.3Nêu các ưu điểm và nhược điểm của giao thức chốt hai kỳ nghiêm ngặt.</para>
+          <para id="id21402053">V.4Nêu các ưu điểm và nhược điểm của giao thức chốt hai kỳ nghiêm khắc.</para>
+          <para id="id21402066">V.5Bộ quản trị điều khiển cạnh tranh của một hệ CSDL phải quyết định cấp cho một đòi hỏi chốt hoặc bắt giao dịch yêu cầu phải chờ. Hãy thiết kế một cấu trúc dữ liệu (tiết kiệm không gian) cho phép bộ quản trị điều khiển cạnh tranh cho ra quyết định mau chóng.</para>
+          <para id="id21402094">V.6Xét sự mở rộng thành giao thức cây-chốt sau. Nó cho phép cả chốt shared và exclusive:</para>
+          <list id="id21402107" list-type="enumerated">
+            <item>Một giao dịch chỉ đọc chỉ có thể yêu cầu các chốt shared. Một giao dịch cập nhật chỉ có thể yêu cầu các chốt exclusive</item>
+            <item>Mỗi giao dịch phải tuân theo các quy tắc của giao thức cây-chốt. Các giao dịch chỉ đọc đầu tiên có thể chốt bất kỳ hạng mục dữ liệu nào, các giao dịch cập nhật đầu tiên phải chốt gốc.</item>
+          </list>
+          <para id="id21402135">Chứng tỏ giao thức đảm bảo tính khả tuần tự và không có deadlock</para>
+          <para id="id21402142">V.7Cho ra ví dụ về các lịch trình có thể dưới giao thức cây nhưng không thể dưới giao thức chốt hai kỳ và ngược lại.</para>
+          <para id="id21402156">V.8Xét một biến thể của giao thức cây, được gọi là giao thức rừng. CSDL được tổ chức như một rừng. Mỗi giao dịch T phải tuân theo các quy tắc sau:</para>
+          <list id="id21402172" list-type="enumerated">
+            <item>Chốt đầu tiên trong mỗi cây có thể trên bất kỳ hạng mục dữ liệu nào</item>
+            <item>Chốt từ thứ hai trở về sau có thể được yêu cầu chỉ nếu cha của nút được yêu cầu hiện đang bị chốt</item>
+            <item>Các hạng mục dữ liệu có thể được tháo chốt bất kỳ lúc nào</item>
+            <item>Một hạng mục dữ liệu không được chốt lại bởi T sau khi T đã tháo chốt cho nó</item>
+          </list>
+          <para id="id21402211">Chứng tỏ giao thức rừng không đảm bảo tính khả tuần tự</para>
+          <para id="id21402218">V.9Khi một giao dịch bị cuộn lại dưới thứ tự tem thời gian, nó được gán một tem thời gian mới. Tại sao không đơn giản để nó giữ lại tem thời gian cũ ?</para>
+          <para id="id21402236">V.10Trong chốt đa hạt, sự khác nhau giữa chốt tường minh và chốt ẩn là gì ?</para>
+          <para id="id21402250">V.11phương thức chốt SIX là hữu dụng trong chốt đa hạt. Phương thức exclusive và shared tăng cường không được sử dụng. Tại sao nó lại vô dụng ?</para>
+          <para id="id21402266">V.12Đối với mỗi một trong các giao thức sau, mô tả sắc thái ứng dụng thực tế gợi ý sử dụng giao thức và sắc thái gợi ý không nên sử dụng giao thức:</para>
+          <list id="id21402279" list-type="enumerated">
+            <item>Chốt hai kỳ</item>
+            <item>Chốt hai kỳ với chốt đa hạt</item>
+            <item>Giao thức cây</item>
+            <item>Thứ tự tem thời gian</item>
+            <item>Hợp lệ</item>
+            <item>Thứ tự tem thời gian đa phiên bản</item>
+            <item>Chốt hai kỳ đa phiên bản</item>
+          </list>
+          <para id="id21402326">V.13 Chứng tỏ rằng có những lịch trình là có thể dưới giao thức chốt hai kỳ nhưng không thể dưới giao thức tem thời gian và ngược lại.</para>
+          <para id="id21402342">V.14Với điều kiện nào tránh deadlock ít đắt giá hơn cho phép deadlock rồi phát hiện?</para>
+        </section>
+      </section>
+    </section>
+  </content>
+</document>

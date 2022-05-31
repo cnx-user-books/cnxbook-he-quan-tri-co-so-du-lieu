@@ -1,0 +1,669 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml">
+  <title>Sql</title>
+  <metadata>
+  <md:content-id>m29922</md:content-id><md:title>Sql</md:title>
+  <md:abstract>MỤC ĐÍCH
+	Giới thiệu một hệ CSDL chuẩn, SQL, các thành phần cơ bản của của nó.  
+YÊU CẦU
+	Hiểu các thành phần cơ bản của SQL-92
+	Hiểu và vận dụng phương pháp "dịch" từ câu vấn tin trong ngôn ngữ tự nhiên sang ngôn ngữ SQL và ngược lại
+	Hiểu và vận dụng cách thêm (xen), xóa dữ liệu
+SQL là ngôn ngữ CSDL quan hệ chuẩn, gốc của nó được gọi là Sequel. SQL là viết tắt của Structured Query Language. Có nhiều phiên bản của SQL. Phiên bản được trình bày trong giáo trình này là phiên bản chuẩn SQL-92.
+SQL có các phần sau:
+•	Ngôn ngữ định nghĩa dữ liệu (DDL). DDL của SQL cung cấp các lệnh để định nghĩa các sơ đồ quan hệ, xoá các quan hệ, tạo các chỉ mục, sủa đổi các sơ đồ quan hệ
+•	Ngôn ngữ thao tác dữ liệu tương tác (Interactive DML). IDML bao gồm một ngôn ngữ dựa trên cả đại số quan hệ lẫn phép tính quan hệ bộ. Nó bao hàm các lệnh xen các bộ, xoá các bộ, sửa đổi các bộ trong CSDL
+•	Ngôn ngữ thao tác dữ liệu nhúng (Embedded DML).   Dạng SQL nhúng được thiết kế cho  việc  sử  dụng  bên  trong  các  ngôn  ngữ  lập  trình  mục  đích  chung (genaral-purpose programming languages) như PL/I, Cobol, Pascal, Fortran, C.
+•	Đinh nghĩa view. DDL SQL cũng bao hàm các lệnh để định nghĩa các view.
+•	Cấp quyền (Authorization). DDL SQL bao hàm cả các lệnh để xác định các quyền truy xuất dến các quan hệ và các view
+•	Tính toàn vẹn (Integrity).  DDL SQL chứa các lệnh để xác định các ràng buộc toàn vẹn mà dữ liệu được lưu trữ trong CSDL phải thoả.
+•	Điều khiển giao dịch. SQL chứa các lệnh để xác định bắt đầu và kết thúc giao dịch, cũng cho phép chốt tường minh dữ liệu để điều khiển cạnh tranh
+Các ví dụ minh hoạ cho các câu lệnh SQL được thực hiện trên các sơ đồ quan hệ sau:
+•	Branch_schema = (Branch_name, Branch_city, Assets):	Sơ đồ quan hệ chi nhánh  nhà  băng  gồm  các  thuộc tính Tên chi nhánh (Branch_name), Thành phố (Branch_city), tài sản (Assets)
+•	Customer_schema = (Customer_name, Customer_street, Customer_city):  Sơ   đồ   quan   hệ   Khách   hàng   gồm   các   thuộc   tính   Tên   khách   hàng      (Customer_name), phố (Customer_street), thành phố (Customer_city)
+•	Loan_schema = (Branch_name, loan_number, amount):  Sơ đồ quan hệ  cho vay gồm các thuộc tính  Tên  chi nhánh,  số  cho  vay  (Loan_number), số lượng (Amount)
+•	Borrower_schema = (Customer_name, loan_number):  Sơ đồ quan hệ người mượn gồm các thuộc tính Tên khách hàng, số cho vay
+•	Account_schema = (Branch_name, account_number, balance):  Sơ đồ quan hệ tài khoản gồm các thuộc tính Tên chi nhánh, số tài khoản (Account_number), số cân đối (Balance: dư  nợ/có)
+•	Depositor_schema = (Customer_name, account_number):  Sơ đồ người gửi gồm các thuộc tính Tên khách hàng, số tài khoản
+Cấu trúc cơ sở của một biểu thức SQL gồm ba mệnh đề: SELECT, FROM và WHERE
+•	Mệnh đề SELECT tương ứng với phép chiếu trong đại số quan hệ, nó được sử dụng để liệt kê các thuộc tính mong muốn trong kết quả của một câu vấn tin
+•	Mệnh đề FROM tương ứng với phép tích Đề các , nó nó liệt kê các quan hệ được quét qua trong sự định trị biểu thức
+•	Mệnh đề WHERE tương ứng với vị từ chọn lọc, nó gồm một vị từ chứa các thuộc tính của các quan hệ xuất hiện sau FROM
+Một câu vấn tin kiểu mẫu có dạng:
+	SELECT A1, A2, ..., Ak
+			FROM R1, R2, ..., Rm
+			WHERE P	
+trong đó Ai là các thuộc tính (Attribute), Rj là các quan hệ (Relation) và P là một vị từ (Predicate). Nếu thiếu WHERE vị từ P là TRUE. 
+Kết quả của một câu vấn tin SQL là một quan hệ.</md:abstract>
+  <md:uuid>7b067e07-7cd1-4acf-b74e-1eb9a4c78475</md:uuid>
+</metadata>
+
+<content>
+    <section id="id-572266618474">
+      <title>MỆNH ĐỀ SELECT</title>
+      <para id="id21214768">Ta tìm hiểu mệnh đề SELECT bằng cách xét một vài ví dụ:</para>
+      <para id="id21214774">"Tìm kiếm tất cả các tên các chi nhánh trong quan hệ cho vay (loan)":</para>
+      <para id="id21214782">SELECT Branch_name</para>
+      <para id="id21214792">FROM Loan;</para>
+      <para id="id21214803">Kết quả là một quan hệ gồm một thuộc tính Tên chi nhánh (Branch_name)</para>
+      <para id="id21214810">Nếu muốn quan hệ kết quả không chứa các tên chi nhánh trùng nhau:</para>
+      <para id="id21214818">SELECT DISTINCT Branch_name</para>
+      <para id="id21214830">FROME Loan;</para>
+      <para id="id21214836">Từ khoá ALL được sử dụng để xác định tường minh rằng các giá trị trùng không bị xoá và nó là mặc nhiên của mệnh đề SELECT.</para>
+      <para id="id21214846">Ký tự * được dùng để chỉ tất cả các thuộc tính:</para>
+      <para id="id21214853">SELECT *</para>
+      <para id="id21214864">FROM Loan;</para>
+      <para id="id21214870">Sau mệnh đề SELECT cho phép các biểu thức số học gồm các phép toán +, -, *, / trên các hằng hoặc các thuộc tính:</para>
+      <para id="id21214882">SELECT Branch_name, Loan_number, amount * 100</para>
+      <para id="id21214889">FROM Loan;</para>
+    </section>
+    <section id="id-247381822925">
+      <title>MỆNH ĐỀ WHERE</title>
+      <para id="id21214904">“Tìm tất cả các số cho vay ở chi nhánh tên Perryridge với số lượng vay lớn hơn1200$"</para>
+      <para id="id21214913">SELECT Loan_number</para>
+      <para id="id21214920">FROM Loan</para>
+      <para id="id21214926">WHERE Branch_name = ‘Perryridge’ AND Amount &gt; 1200;</para>
+      <para id="id21214938">SQL sử dụng các phép nối logic: NOT, AND, OR. Các toán hạng của các phép nối logic có thể là các biểu thức chứa các toán tử so sánh =, &gt;=, &lt;&gt;, &lt;, &lt;=. </para>
+      <para id="id21214954">Toán tử so sánh BETWEEN được dùng để chỉ các giá trị nằm trong một khoảng:</para>
+      <para id="id21214966">SELECT Loan_number</para>
+      <para id="id21214972">FROM Loan</para>
+      <para id="id21214979">WHERE Amount BETWEEN 50000 AND 100000;</para>
+      <para id="id21214990">SELECT Loan_number</para>
+      <para id="id21215003">FROM Loan</para>
+      <para id="id21215010">WHERE Amount &gt;= 50000 AND Amount &lt;= 100000;</para>
+      <para id="id21215018">Ta cũng có thể sử dụng toán tử NOT BETWEEN.</para>
+    </section>
+    <section id="id-310744606549">
+      <title>MỆNH ĐỀ FROM</title>
+      <para id="id21215038">"Trong tất cả các khách hàng có vay ngân hàng tìm tên và số cho vay của họ"</para>
+      <para id="id21215046">SELECT DISTINCT Customer_name, Borrower.Loan_number</para>
+      <para id="id21215053">FROM Borrower, Loan</para>
+      <para id="id21215060">WHERE Borrower.Loan_number = Loan.Loan_number;</para>
+      <para id="id21215067">SQL sử dụng cách viết &lt;tên quan hệ &gt;.&lt; tên thuộc tính &gt; để che dấu tính lập lờ trong trường hợp tên thuộc tính trong các sơ đồ quan hệ trùng nhau.</para>
+      <para id="id21215080">"Tìm các tên và số cho vay của tất cả các khách hàng có vay ở chi nhánh Perryridge"</para>
+      <para id="id21215088">SELECT Customer_name, Borrower.Loan_number</para>
+      <para id="id21215094">FROM Borrower, Loan</para>
+      <para id="id21215101">WHERE Borrower.Loan_number = Loan.Loan_number AND </para>
+      <para id="id21215108"> Branch_name =’Perryridge’;</para>
+    </section>
+    <section id="id-385019542378">
+      <title>CÁC PHÉP ĐỔI TÊN</title>
+      <para id="id21215130">SQL cung cấp một cơ chế đổi tên cả tên quan hệ lẫn tên thuộc tính bằng mệnh đề dạng:</para>
+      <para id="id21215138">&lt; tên cũ &gt; AS &lt; tên mới &gt;</para>
+      <para id="id21215150">mà nó có thể xuất hiện trong cả mệnh đề SELECT lẫn FROM</para>
+      <para id="id21215156">SELECT DISTINCT Customer_name, Borrower.Loan_number</para>
+      <para id="id21215163">FROM Borrower, Loan</para>
+      <para id="id20243614">WHERE Borrower.Loan_number = Loan.Loan_number AND </para>
+      <para id="id20243621"> Branch_name =’Perryridge’;</para>
+      <para id="id20243634">Kết quả của câu vấn tin này là một quan hệ hai thuộc tính: Customer_name, Loan_number </para>
+      <para id="id20243644">Đổi tên thuộc tính của quan hệ kết quả:</para>
+      <para id="id20243649">SELECT Customer_name, Borrower.Loan_number AS Loan_Id</para>
+      <para id="id20243661">FROM Borrower, Loan</para>
+      <para id="id20243667">WHERE Borrower.Loan_number = Loan.Loan_number AND </para>
+      <para id="id20243674"> Branch_name =’Perryridge’;</para>
+    </section>
+    <section id="id-758475779454">
+      <title>CÁC BIẾN BỘ (Tuple Variables)</title>
+      <para id="id20243696">Các biến bộ được định nghĩa trong mệnh đề FROM thông qua sử dụng mệnh đề AS:</para>
+      <para id="id20243704">SELECT DISTINCT Customer_name, T.Loan_number</para>
+      <para id="id20243711">FROM Borrower AS T, Loan AS S</para>
+      <para id="id20243737">WHERE T.Loan_number = S.Loan_number AND </para>
+      <para id="id20243744"> Branch_name =’Perryridge’;</para>
+      <para id="id20243757">“Tìm các tên của tất cả các chi nhánh có tài sản lớn hơn ít nhất một chi nhánh ở Brooklyn“</para>
+      <para id="id20243766">SELECT DISTINCT T.branch_name</para>
+      <para id="id20243772">FROM Branch AS T, Banch AS S</para>
+      <para id="id20243792">WHERE T.assets &gt; S.assets AND S.Branch_City = ‘Brooklyn’</para>
+      <para id="id20243801">SQL92 cho phép sử dụng các viết (v1, v2, ..., vn) để ký hiệu một n-bộ với các giá trị v1, v2, ..., vn. Các toán tử so sánh có thể được sử dụng trên các n-bộ và theo thứ tự tự điển. Ví dụ (a1, b1) &lt;= (a2, b2) là đúng nếu (a1 &lt; b1) OR ((a1 = b1) AND (a2 &lt; b2)).</para>
+    </section>
+    <section id="id-237370631834">
+      <title>CÁC PHÉP TOÁN TRÊN CHUỖI</title>
+      <para id="id20243878">Các phép toán thường được dùng nhất trên các chuỗi là phép đối chiếu mẫu sử dụng toán tử LIKE. Ta mô tả các mẫu dùng hai ký tự đặc biệt:</para>
+      <list id="id20243894" list-type="bulleted">
+        <item>ký tự phần trăm (%): ký tự % tương xứng với chuỗi con bất kỳ</item>
+        <item>ký tự gạch nối (_): ký tự gạch nối tương xứng với ký tự bất kỳ. </item>
+      </list>
+      <list id="id20243927" list-type="bulleted">
+        <item>‘Perry%’ tương xứng với bất kỳ chuỗi nào bắt đầu bởi ‘Perry’</item>
+        <item>‘%idge%’ tương xứng với bất kỳ chuỗi nào chứa ‘idge’ như chuỗi con</item>
+        <item>‘___’ tương xứng với chuỗi bất kỳ có đúng ba ký tự</item>
+        <item>‘___%’ tương xứng với chuỗi bất kỳ có ít nhất ba ký tự</item>
+      </list>
+      <para id="id20243957">"Tìm tên của tất cả các khách hàng tên phố của họ chứa chuỗi con ‘Main’</para>
+      <para id="id20243965">SELECT Customer_name</para>
+      <para id="id20243970">FROM Customer</para>
+      <para id="id20243976">WHERE Customer_street LIKE ‘%Main%’</para>
+      <para id="id20243983">Nếu trong chuỗi mẫu có chứa các ký tự % _ \ , để tránh nhầm lẫn ký tự với"dấu hiệu thay thế", SQL sử dụng cách viết: ký tự escape (\) đứng ngay trước ký tự"đặc biệt". Ví dụ nếu chuỗi mẫu là ab%cd được viết là ‘ab\%cd’, chuỗi mẫu là ab_cde được viết là ‘ab\_cde’, chuỗi mẫu là ab\cd được viết là ‘ab\\cd’</para>
+      <para id="id20244010">SQL cho phép đối chiếu không tương xứng bằng cách sử dụng NOT LIKE </para>
+      <para id="id20244022">SQL cũng cho phép các hàm trên chuỗi: nối hai chuỗi (|), trích ra một chuỗi con, tìm độ dài chuỗi, biến đổi một chuỗi chữ thường sang chuỗi chữ hoa và ngược lại ...</para>
+    </section>
+    <section id="id-423919483776">
+      <title>THỨ TỰ TRÌNH BÀY CÁC BỘ (dòng)</title>
+      <para id="id20244043">Mệnh đề ORDER BY tạo ra sự trình bày các dòng kết quả của một câu vấn tin theo một trình tự. Để liết kê theo thứ tự alphabet tất cả các khách hàng có vay ở chi nhánh Perryridge:</para>
+      <para id="id20244060">SELECT DISTINCT Customer_name</para>
+      <para id="id20244071">FROM Borrower, Loan</para>
+      <para id="id20244078">WHERE Borrower.Loan_number = Loan.Loan_number AND</para>
+      <para id="id20244085">Branch_name = ‘Perryridge’</para>
+      <para id="id20244095">ORDER BY Customer_name;</para>
+      <para id="id20244102">Mặc nhiên, mệnh đề ORDER BY liệt kê theo thứ tự tăng, tuy nhiên ta có thể làm liệt kê theo thứ tự giảm/tăng bằng cách chỉ rõ bởi từ khoá DESC/ ASC</para>
+      <para id="id20244134">SELECT *</para>
+      <para id="id20244140">FROMLoan</para>
+      <para id="id20244149">ORDER BY Amount DESC, Loan_number ASC;</para>
+    </section>
+    <section id="id-0168941845306">
+      <title>CÁC PHÉP TOÁN TẬP HỢP</title>
+      <para id="id20244165">SQL92 có các phép toán UNION, INTERSECT, EXCEPT chúng hoạt động giống như các phép toán hợp, giao, hiệu trong đại số quan hệ. Các quan hệ tham gia vào các phép toán này phải tương thích (có cùng tập các thuộc tính). </para>
+      <list id="id20244183" list-type="bulleted">
+        <item>Phép toán UNION </item>
+      </list>
+      <para id="id20244198">“tìm kiếm tất cả các khách hàng có vay, có tài khoản hoặc cả hai ở ngân hàng”</para>
+      <para id="id20244204">(SELECT Customer_name</para>
+      <para id="id20244212"> FROM Depositor)</para>
+      <para id="id20244219">UNION</para>
+      <para id="id20244225">(SELECT Customer_name</para>
+      <para id="id20244230"> FROM Borrower);</para>
+      <para id="id20244238">Phép toán hợp UNION tự động loại bỏ các bộ trùng, nếu ta muốn giữ lại các bộ trùng ta phải sử dụng UNION ALL </para>
+      <para id="id20244252">(SELECT Customer_name</para>
+      <para id="id20244260"> FROM Depositor)</para>
+      <para id="id20244268">UNION ALL</para>
+      <para id="id20244274">(SELECT Customer_name</para>
+      <para id="id20244279"> FROM Borrower);</para>
+      <list id="id20244287" list-type="bulleted">
+        <item>Phép toán INTERSECT</item>
+      </list>
+      <para id="id20244301">“tìm kiếm tất cả các khách hàng có vay và cả một tài khoản tại ngân hàng”</para>
+      <para id="id20244307">(SELECT DISTINCT Customer_name</para>
+      <para id="id20244312"> FROM Depositor)</para>
+      <para id="id20244320">INTERSECT</para>
+      <para id="id20244328">(SELECT DISTINCT Customer_name</para>
+      <para id="id20244333"> FROM Borrower);</para>
+      <para id="id20244341">Phép toán INTERESCT tự động loại bỏ các bộ trùng, Để giữ lại các bộ trùng ta sử dụng INTERSECT ALL</para>
+      <para id="id20244354">(SELECT Customer_name</para>
+      <para id="id20244361"> FROM Depositor)</para>
+      <para id="id20244368">INTERSECT ALL</para>
+      <para id="id20244377">(SELECT Customer_name FROM Borrower);</para>
+      <list id="id20244390" list-type="bulleted">
+        <item>Phép toán EXCEPT</item>
+      </list>
+      <para id="id20244404">“Tìm kiếm tất cả các khách hàng có tài khoản nhưng không có vay tại ngân hàng”</para>
+      <para id="id20244413">(SELECT Customer_name</para>
+      <para id="id20244419"> FROM Depositor)</para>
+      <para id="id20244427">EXCEPT</para>
+      <para id="id20244435">(SELECT Customer_name</para>
+      <para id="id20244441"> FROM Borrower);</para>
+      <para id="id20244449">EXCEPT tự động loại bỏ các bộ trùng, nếu muốn giữ lại các bộ trùng phải dùng EXCEPT ALL</para>
+      <para id="id20244462">(SELECT Customer_name</para>
+      <para id="id20244468"> FROM Depositor)</para>
+      <para id="id20244475">EXCEPT ALL</para>
+      <para id="id20244484">(SELECT Customer_name</para>
+      <para id="id20244490"> FROM Borrower);</para>
+    </section>
+    <section id="id-890456713649">
+      <title>CÁC HÀM TÍNH GỘP</title>
+      <para id="id20244506">SQL có các hàm tính gộp (aggregate functions):</para>
+      <list id="id20244512" list-type="bulleted">
+        <item>Tính trung bình (Average): AVG()</item>
+        <item>Tính min : MIN()</item>
+        <item>Tính max:MAX()</item>
+        <item>Tính tổng:SUM()</item>
+        <item>Đếm:COUNT()</item>
+      </list>
+      <para id="id20244614">Đối số của các hàm AVG và SUM phải là kiểu dữ liệu số</para>
+      <para id="id20244627">"Tìm số cân đối tài khoản trung bình tại chi nhánh Perryridge”</para>
+      <para id="id20244637">SELECT AGV(balace)</para>
+      <para id="id20244647">FROM Account</para>
+      <para id="id20244654">WHERE Branch_name = ‘Perryridge’;</para>
+      <para id="id20244661">SQL sử dụng mệnh để GROUP BY vào mục đích nhóm các bộ có cùng giá trị trên các thuộc tính nào đó</para>
+      <para id="id20244677">"Tìm số cân đối tài khoản trung bình tại mỗi chi nhánh ngân hàng”</para>
+      <para id="id20244687">SELECT Branch_name, AVG(balance)</para>
+      <para id="id20244694">FROM Account</para>
+      <para id="id20244700">GROUP BY Branch_name;</para>
+      <para id="id20244707">“Tìm số các người gửi tiền đối với mỗi chi nhánh ngân hàng”</para>
+      <para id="id20244716">SELECT Branch_name, COUNT(DISTINCT Customer_name)</para>
+      <para id="id20244723">FROM Depositor, Account</para>
+      <para id="id20244730">WHERE Depositor.Account_number = Account.Acount_number</para>
+      <para id="id20244737">GROUP BY Branch_name</para>
+      <para id="id20244744">Giả sử ta muốn liệt kê các chi nhánh ngân hàng có số cân đối trung bình lớn hơn 1200$. Điều kiện này không áp dụng trên từng bộ, nó áp dụng trên từng nhóm. Để thực hiện được điều này ta sử dụng mệnh đề HAVING của SQL</para>
+      <para id="id20244763">SELECT Branch_name, AVG(balance)</para>
+      <para id="id20244770">FROM Account</para>
+      <para id="id20244776">GROUP BY Branch_name</para>
+      <para id="id20244783">HAVING AGV(Balance) &gt; 1200$;</para>
+      <para id="id20244790">Vị từ trong mệnh đề HAVING được áp dụng sau khi tạo nhóm, như vậy hàm AVG có thể được sử dụng</para>
+      <para id="id20244799">“Tìm số cân đối đối với tất cả các tài khoản”</para>
+      <para id="id20244807">SELECT AVG(Balance) FROM Account;</para>
+      <para id="id20244818">“Đếm số bộ trong quan hệ Customer”</para>
+      <para id="id20244827">SELECT Count(*)FROM Customer;</para>
+      <para id="id20244836">SQL không cho phép sử dụng DISTINCT với COUNT(*), nhưng cho phép sử dụng DISTINCT với MIN và MAX. </para>
+      <para id="id20244858">Nếu WHERE và HAVING có trong cùng một câu vấn tin, vị từ sau WHERE được áp dụng trước. Các bộ thoả mãn vị từ WHERE được xếp vào trong nhóm bởi GROUP BY, mệnh đề HAVING (nếu có) khi đó được áp dụng trên mỗi nhóm. Các nhóm không thoả mãn mệnh đề HAVING sẽ bị xoá bỏ.</para>
+      <para id="id20244872">“Tìm số cân đối trung bình đối với mỗi khách hàng sống ở Harrison và có ít nhất ba tài khoản”</para>
+      <para id="id20244881"/>
+      <para id="id20244886">SELECT Depositor.Customer_name, AVG(Balance)</para>
+      <para id="id20244892">FROM Depositor, Account, Customer</para>
+      <para id="id20244898">WHERE Depositor.Account_number = Account.Account_number AND</para>
+      <para id="id20244905">Depositor.Customer_name = Customer.Customer_name AND </para>
+      <para id="id20244915">Customer.city =’Harrison’</para>
+      <para id="id20244920">GROUP BY Depositor.Customer_name</para>
+      <para id="id20244926">HAVING COUNT(DISTINT Depositor.Account_number) &gt;= 3;</para>
+    </section>
+    <section id="id-623878720222">
+      <title>CÁC GIÁ TRỊ NULL</title>
+      <para id="id20244943">SQL cho phép sử dụng các giá trị null để chỉ sự vắng mặt thông tin tạm thời về giá trị của một thuộc tính. Ta có thể sử dụng từ khoá đặc biệt null trong vị từ để thử một giá trị null. </para>
+      <para id="id20244961">"Tìm tìm tất cả các số vay trong quan hệ Loan với giá trị Amount là null"</para>
+      <para id="id20244968">SELECT Loan_number</para>
+      <para id="id20244975">FROM Loan</para>
+      <para id="id20244981">WHERE Amount is null</para>
+      <para id="id20244992">Vị từ not null thử các giá trị không rỗng</para>
+      <para id="id20245004">Sử dụng giá trị null trong các biểu thức số học và các biểu thức so sánh gây ra một số phiền phức. Kết quả của một biểu thức số học là null nếu một giá trị input bất kỳ là null. Kết quả của một biểu thức so sánh chứa một giá trị null có thể được xem là false. SQL92 xử lý kết quả của một phép so sánh như vậy như là một giá trị unknown, là một giá trị không là true mà cũng không là false. SQL92 cũng cho phép thử kết quả của một phép so sánh là unknown hay không. Tuy nhiên, trong hầu khắp các trường hợp, unknown được xử lý hoàn toàn giống như false.</para>
+      <para id="id20245049">Sự tồn tại của các giá trị null cũng làm phức tạp việc sử lý các toán tử tính gộp. Giả sử một vài bộ trong quan hệ Loan có các giá trị null trên trường Amount. Ta xét câu vấn tin sau:</para>
+      <para id="id20245068">SELECT SUM(Amount)</para>
+      <para id="id20245078">FROM LOAN</para>
+      <para id="id20245084">Các giá trị được lấy tổng trong câu vấn tin bao hàm cả các trị null. Thay vì tổng là null, SQL chuẩn thực hiện phép tính tổng bằng cách bỏ qua các giá trị input là null.</para>
+      <para id="id20245098">Nói chung, các hàm tính gộp tuân theo các quy tắc sau khi xử lý các giá trị null: Tất cả các hàm tính gộp ngoại trừ COUNT(*) bỏ qua các giá trị input null. Khi các giá trị nul bị bỏ qua, tập các giá trị input có thể là rõng. COUNT() của một tập rỗng được định nghĩa là 0. Tất cả các hàm tính gộp khác trả lại giá trị null khi áp dụng trên tập hợp input rỗng. </para>
+    </section>
+    <section id="id-300256554646">
+      <title>CÁC CÂU VẤN TIN CON LỒNG NHAU (Nested Subqueries) </title>
+      <para id="id20245122">SQL cung cấp một cơ chế lòng nhau của các câu vấn tin con. Một câu vấn tin con là một biểu thức SELECT-FROM-WHERE được lồng trong một caau vấn tin khác. Các câu vấn tin con thường được sử dụng để thử quan hệ thành viên tập hợp, so sánh tập hợp và bản số tập hợp. </para>
+      <section id="id-582815042768">
+        <title>QUAN HỆ THÀNH VIÊN TẬP HỢP (Set relationship)</title>
+        <para id="id20245145">SQL đưa vào các phép tính quan hệ các phép toán cho phép thử các bộ có thuộc một quan hệ nào đó hay không. Liên từ IN thử quan hệ thành viên này. Liên từ NOT IN thử quan hệ không là thành viên. </para>
+        <para id="id20245163">"Tìm tất cả các khách hàng có cả vay lẫn một tài khoản tại ngân hàng"</para>
+        <para id="id20245170">Ta đã sử dụng INTERSECTION để viết câu vấn tin này. Ta có thể viết câu vấn tin này bằng các sử dụng IN như sau:</para>
+        <para id="id20245179">SELECT DISTINCT Customer_name</para>
+        <para id="id20245184">FROM Borrower</para>
+        <para id="id20245190">WHERE Customer_name IN (SELECT Customer_name</para>
+        <para id="id20245198">FROM Depositor)</para>
+        <para id="id20245208">Ví dụ này thử quan hệ thành viên trong một quan hệ một thuộc tính. SQL92 cho phép thử quan hệ thành viên trên một quan hệ bất kỳ. </para>
+        <para id="id20245218">"Tìm tất cả các khách hàng có cả vay lãn một tài khoản ở chi nhánh Perryridge"</para>
+        <para id="id20245226">Ta có thể viết câu truy vấn như sau:</para>
+        <para id="id20245231">SELECT DISTINCT Customer_name</para>
+        <para id="id20245237">FROM Borrower, Loan</para>
+        <para id="id20245242">WHERE Borrower. Loan_number = Loan.Loan_number AND</para>
+        <para id="id20245251"> Branch_name = 'Perryridge'AND</para>
+        <para id="id20245262">(Branch_name. Customer_name IN</para>
+        <para id="id20245269">(SELECT Branch_name, Customer_name </para>
+        <para id="id20245278"> FROM Depositor, Account</para>
+        <para id="id20245289">WHEREDepositor.Account_number= Account.Account_number )</para>
+        <para id="id20245298">"Tìm tất cả các khách hàng có vay ngân hàng nhưng không có tài khoản tại ngân hàng"</para>
+        <para id="id20245309">SELECT DISTINCT Customer_name</para>
+        <para id="id20245315">FROM borrower</para>
+        <para id="id20245320">WHERE Customer_name NOT IN (SELECT Customer_name</para>
+        <para id="id20245328">FROM Depositor)</para>
+        <para id="id20245339">Các phép toán IN và NOT IN cũng có thể được sử dụng trên các tập hợp liệt kê:</para>
+        <para id="id20245349">SELECT DISTINCT Customer_name</para>
+        <para id="id20245355">FROM borrower</para>
+        <para id="id20245362">WHERE Customer_name NOT IN ('Smith', 'Jone')</para>
+      </section>
+      <section id="id-413988226513">
+        <title>SO SÁNH TẬP HỢP (Set Comparision) </title>
+        <para id="id20245378">"Tìm tên của tất cả các chi nhánh có tài sản lớn hơn ít nhất một chi nhánh đóng tại Brooklyn"</para>
+        <para id="id20245390">SELECT DISTINCT Branch_name</para>
+        <para id="id20245396">FROM Branch AS T, Branch AS S</para>
+        <para id="id20245401">WHERE T.assets &gt; S.assets AND S.branch_city = 'Brooklyn'</para>
+        <para id="id20245409">Ta có thể viết lại câu vấn tin này bằng cách sử dụng mệnh đề"lớn hơn ít nhất một"trong SQL </para>
+        <list id="id20245417" list-type="bulleted">
+          <item>SOME :</item>
+        </list>
+        <para id="id20245430">SELECT Branch_name</para>
+        <para id="id20245434">FROM Branch</para>
+        <para id="id20245439">WHERE Assets &gt; SOME (SELECT Assets </para>
+        <para id="id20245446">FROM Branch</para>
+        <para id="id20245455">WHERE Branch_city ='Brooklyn')</para>
+        <para id="id20245463">Câu vấn tin con</para>
+        <para id="id20245468">( SELECT Assets </para>
+        <para id="id20245473">FROM Branch</para>
+        <para id="id20245480">WHERE Branch_city ='Brooklyn')</para>
+        <para id="id20245487">sinh ra tập tất cả các Assets của tất cả các chi nhánh đóng tại Brooklyn. So sánh &gt; SOME trong mệnh đề WHERE nhận giá trị đúng nếu giá trị Assets của bộ được xét lớn hơn ít nhất một trong các giá trị của tập hợp này.</para>
+        <para id="id20245502">SQL cũng có cho phép các so sánh &lt; SOME, &gt;= SOME, &lt;= SOME, = SOME, &lt;&gt; SOME</para>
+        <list id="id20245516" list-type="bulleted">
+          <item>ALL</item>
+        </list>
+        <para id="id20245524">"Tìm tất cả các tên của các chi nhánh có tài sản lớn hơn tài sản của bất kỳ chi nhánh nào đóng tại Brooklyn"</para>
+        <para id="id20245537">SELECT Branch_name</para>
+        <para id="id20288978">FROM Branch</para>
+        <para id="id20288984">WHERE Assets &gt; ALL (SELECT Assets </para>
+        <para id="id20288997">FROM Branch</para>
+        <para id="id20289007">WHERE Branch_citty = 'Brooklyn')</para>
+        <para id="id20289016">SQL cũng cho phép các phép so sánh: &lt; ALL, &lt;= ALL, &gt; ALL, &gt;= ALL, = ALL, &lt;&gt; ALL.</para>
+        <para id="id20289029">"Tìm chi nhánh có số cân đối trung bình lớn nhất"</para>
+        <para id="id20289038">SQL không cho phép hợp thành các hàm tính gộp, như vậy MAX(AVG (...)) là không được phép. Do vậy, ta phải sử dụng câu vấn tin con như sau:</para>
+        <para id="id20289048">SELECT Branch_name</para>
+        <para id="id20289054">FROM Account</para>
+        <para id="id20289060">GROUP BY Branch_name</para>
+        <para id="id20289065">HAVING AVG (Balance) &gt;= ALL (SELECT AVG (balance)</para>
+        <para id="id20289074">FROM Account</para>
+        <para id="id20289085">GROUP BY Branch_name)</para>
+      </section>
+    </section>
+    <section id="id-632388366688">
+      <title>THỬ CÁC QUAN HỆ RỖNG</title>
+      <para id="id20289106">"tìm tất cả các khách hàng có cả vay lẫn tài khoản ở ngân hàng"</para>
+      <para id="id20289113">SELECT Customer_name</para>
+      <para id="id20289118">FROM Borrower</para>
+      <para id="id20289122">WHERE EXISTS (SELECT *</para>
+      <para id="id20289138">FROM Depositor</para>
+      <para id="id20289146">WHERE Depositor.Customer_name = Borrower.Customer_name)</para>
+      <para id="id20289154">Cấu trúc EXISTS trả lại giá trị true nếu quan hệ kết quả của câu vấn tin con không rỗng. SQL cũng cho phép sử dụng cấu trúc NOT EXISTS để kiểm tra tính không rỗng của một quan hệ.</para>
+      <para id="id20289179">"Tìm tất cả các khách hàng có tài khoản tại mỗi chi nhánh đóng tại Brooklyn"</para>
+      <para id="id20289190">SELECT DISTINCT S.Customer_name</para>
+      <para id="id20289195">FROM Depositor AS S</para>
+      <para id="id20289203">WHERE NOT EXISTS( ( SELECT Branch_name</para>
+      <para id="id20289211"> FROM Branch</para>
+      <para id="id20289225"> WHERE Branch_city = 'Brooklyn')</para>
+      <para id="id20289238"> EXCEPT</para>
+      <para id="id20289251"> ( SELECT R.branch_name </para>
+      <para id="id20289265"> FROM Depositor AS T, Account AS R</para>
+      <para id="id20289278"> WHERE T.Acoount_number = R.Account_number</para>
+      <para id="id20289296">AND S.Customer_name = T.Customer_name) )</para>
+    </section>
+    <section id="id-151966906831">
+      <title>THỬ KHÔNG CÓ CÁC BỘ TRÙNG </title>
+      <para id="id20289316">SQL đưa vào cấu trúc UNIQUE để kiểm tra việc có bộ trùng trong quan hệ kết quả của một câu vấn tin con. </para>
+      <para id="id20289330">"Tìm tất cả khách hàng chỉ có một tài khoản ở chi nhánh Perryridge"</para>
+      <para id="id20289337">SELECT T.Customer_name</para>
+      <para id="id20289344">FROM Depositor AS T</para>
+      <para id="id20289350">WHERE UNIQUE (SELECT R.Customer_name</para>
+      <para id="id20289372">FROM Account, Depositor AS R</para>
+      <para id="id20289384">WHERE T.Customer_name = R.Customer_name AND</para>
+      <para id="id20289394">R.Account_number = Account.Acount_number ANDAccount.Branch_name = 'Perryridge')</para>
+      <para id="id20289404">Ta có thể thử sự tồn tại của các bộ trùng trong một vấn tin con bằng cách sử dụng cấu trúc NOT UNIQUE </para>
+      <para id="id20289417">"Tìm tất cả các khách hàng có ít nhất hai tài khoản ở chi nhánh Perryridge"</para>
+      <para id="id20289425">SELECT DISTINCT T.Customer_name</para>
+      <para id="id20289431">FROM Account, Depositor AS T</para>
+      <para id="id20289440">WHERE NOT UNIQUE ( SELECT R.Customer_name</para>
+      <para id="id20289447"> FROM Account, Depositor AS R</para>
+      <para id="id20289464"> WHERE T.Customer_name=R.Customer_name</para>
+      <para id="id20289478">ANDR.Account_number = Account.Account_number </para>
+      <para id="id20289485">AND Account.Branch_name = 'Perryridge')</para>
+      <para id="id20289492">UNIQUE trả lại giá rị false khi và chỉ khi quan hệ có hai bộ trùng nhau. Nếu hai bộ t1, t2 có ít nhất một trường null, phép so sánh t1 = t2 cho kết quả false. Do vậy UNIQUE có thể trả về giá trị true trong khi quan hệ có nhiều bộ trùng nhau nhưng chứa trường giá trị null !</para>
+    </section>
+    <section id="id-569011205096">
+      <title>QUAN HỆ DẪN XUẤT</title>
+      <para id="id20289547">SQL92 cho phép một biểu thức vấn tin con được dùng trong mệnh đề FROM. Nếu biểu thức như vậy được sử dụng, quan hệ kết quả phải được cho một cái tên và các thuộc tính có thể được đặt tên lại (bằng mệnh đề AS)</para>
+      <para id="id20289561">Ví dụ câu vấn tin con:</para>
+      <para id="id20289566">(SELECT Branch_name, AVG(Balance)</para>
+      <para id="id20289578"> FROM Account</para>
+      <para id="id20289587"> GROUP BY Branch_name)</para>
+      <para id="id20289596">AS result (Branch_name, Avg_balace)</para>
+      <para id="id20289602">Sinh ra quan hệ gồm tên của tất cả các chi nhánh, và số cân đối trung bình tương ứng. Quan hệ này được đặt tên là result với hai thuộc tính Branch_name và Avg_balance.</para>
+      <section id="id-411526380504">
+        <title>"Tìm số cân đối tài sản trung bình của các chi nhánh tại đó số cân đối tài khoản trung bình lớn hơn 1200$"</title>
+        <para id="id20289628">SELECT Branch_name, avg_balance</para>
+        <para id="id20289636">FROM ( SELECT Branch_name, AVG(Balance)</para>
+        <para id="id20289647">  FROM Account</para>
+        <para id="id20289661"> GROUP BY Branch_name)</para>
+        <para id="id20289671">AS result (Branch_name, Avg_balace)</para>
+        <para id="id20289679">WHERE avg_balance &gt; 1200</para>
+      </section>
+    </section>
+    <section id="id-0447320590854">
+      <title>VIEWS</title>
+      <para id="id20289695">Trong SQL, để định nghĩa view ta sử dụng lệnh CREATE VIEW. Một view phải có một tên.</para>
+      <para id="id20289708">CREATE VIEW &lt; tên view &gt; AS &lt; Biểu thức vấn tin &gt;</para>
+      <para id="id20289722">"Tạo một view gồm các tên chi nhánh, tên của các khách hàng có hoặc một tài khoản hoặc vay ở chi nhánh này"</para>
+      <para id="id20289730">Giả sử ta muốn đặt tên cho view này là All_customer.</para>
+      <para id="id20289737">CREATE VIEW All_customerAS</para>
+      <para id="id20289746">(SELECT Branch_name, Customer_name </para>
+      <para id="id20289754">FROM Depositor, Account</para>
+      <para id="id20289762">WHERE Depositor.Account_number = Account.Account_number )</para>
+      <para id="id20289770">UNION</para>
+      <para id="id20289777">( SELECT Branch_name, Customer_name</para>
+      <para id="id20289786">FROM Borrower, Loan</para>
+      <para id="id20289794">WHERE Borrower.Loan_number = Loan.Loan_number)</para>
+      <para id="id20289802">Tên thuộc tính của một view có thể xác định một cách tường minh như sau:</para>
+      <para id="id20289809">CREATE VIEW Branch_total_loan (Branch_name, Total_loan) AS</para>
+      <para id="id20289819">( SELECT Branch_name, sum(Amount)</para>
+      <para id="id20289826"> FROM Loan</para>
+      <para id="id20289838"> GROUP BY Branch_name)</para>
+      <para id="id20289850">Một view là một quan hệ, nó có thể tham gia vào các câu vấn tin với vai trò của một quan hệ.</para>
+      <para id="id20289858">SELECT Customer_name</para>
+      <para id="id20289865">FROM All_customer</para>
+      <para id="id20289872">WHERE Branch_name = 'Perryridge'</para>
+      <para id="id20289878">Một câu vấn tin phức tạp sẽ dễ hiểu hơn, dễ viết hơn nếu ta cấu trúc nó bằng cách phân tích nó thành các view nhỏ hơn và sau đó tổ hợp lại.</para>
+      <para id="id20289889">Định nghĩa view được giữ trong CSDL đến tận khi một lệnh DROP VIEW &lt; tên view &gt; được gọi. Trong chuẩn SQL 3 hiện đang được phát triển bao hàm một đề nghị hỗ trợ những view tạm không được lưu trong CSDL.</para>
+    </section>
+    <section id="id-600875564478">
+      <title>SỬA ĐỔI CƠ SỞ DỮ LIỆU</title>
+      <para id="id20289913">DELETE</para>
+      <para id="id20289917">INSERT</para>
+      <para id="id20289922">UPDATE</para>
+      <section id="id-929147816793">
+        <title>XÓA (Delete)</title>
+        <para id="id20289933">Ta chỉ có thể xoá nguyên vẹn một bộ trong một quan hệ, không thể xoá các giá trị của các thuộc tính. Biểu thức xoá trong SQL là:</para>
+        <para id="id20289947">DELETE FROM r</para>
+        <para id="id20289954">[WHERE P]</para>
+        <para id="id20289961">Trong đó p là một vị từ và r là một quan hệ.</para>
+        <para id="id20289970">Lệnh DELETE duyệt qua tất cả các bộ t trong quan hệ r, nếu P(t) là true, DELETE xoá t khỏi r. Nếu không có mệnh đề WHERE, tất cả các bộ trong r bị xoá.</para>
+        <para id="id20290013">Lệnh DELETE chỉ hoạt động trên một quan hệ.</para>
+        <list id="id20290024" list-type="bulleted">
+          <item>DELETE FROM Loan = Xoá tất cả các bộ của quan hệ Loan</item>
+        </list>
+        <list id="id20290034" list-type="bulleted">
+          <item>DELETE FROM Depositor WHERE Customer_name = 'Smith'</item>
+        </list>
+        <list id="id20290048" list-type="bulleted">
+          <item>DELETE FROM Loan</item>
+        </list>
+        <para id="id20290057"> WHERE Amount BETWEEN 1300 AND 1500</para>
+        <list id="id20290067" list-type="bulleted">
+          <item>DELETE FROM Account</item>
+        </list>
+        <para id="id20290076"> WHERE Branch_name IN (SELECT Branch_name </para>
+        <para id="id20290089">FROM Branch</para>
+        <para id="id20290100">WHERE Branch_city = 'Brooklyn')</para>
+        <list id="id20290111" list-type="bulleted">
+          <item>DELETE FROM Account</item>
+        </list>
+        <para id="id20290120">WHERE Balance &lt; (SELECT AVG(Balance)</para>
+        <para id="id20290126">FROM Account)</para>
+      </section>
+      <section id="id-467110904663">
+        <title>XEN (Insert) </title>
+        <para id="id20290142">Để xen dữ liệu vào một quan hệ, ta xác định một bộ cần xen hoặc viết một câu vấn tin kết quả của nó là một tập các bộ cần xen. Các giá trị thuộc tính của bộ cần xen phải thuộc vào miền giá trị của thuộc tính và số thành phần của bộ phải bằng với ngôi của quan hệ.</para>
+        <para id="id20290158">“Xen vào quan hệ Account một bộ có số tài khoản là A-9732, số cân đối là 1200$ và tài khoản này được mở ở chi nhánh Perryridge”</para>
+        <para id="id20290168">INSERT INTO Account</para>
+        <para id="id20290181">VALUES (‘Perryridge’, ‘A-9732’, 1200);</para>
+        <para id="id20290189">Trong ví dụ này thự tự các giá trị thuộc tính cần xen trùng khớp với thứ tự các thuộc tính trong sơ đồ quan hệ. SQL cho phép chỉ rõ các thuộc tính và các giá trị tương ứng cần xen:</para>
+        <para id="id20290201">INSERT INTO Account (Branch_name, Account_number, Balance)</para>
+        <para id="id20290211">VALUES (‘Perryridge’, ‘A-9732’, 1200);</para>
+        <para id="id20290219"/>
+        <para id="id20290223">INSERT INTO Account (Account_number, Balance, Branch_name)</para>
+        <para id="id20290234">VALUES (‘A-9732’, 1200, ‘Perryridge’);</para>
+        <para id="id20290242">“Cấp cho tất cả các khách hàng vay ở chi nhánh Perryridge một tài khoản với số cân đối là 200$ như một quà tặng sử dụng số vay như số tài khoản“</para>
+        <para id="id20290252">INSERT INTO Account</para>
+        <para id="id20290265">SELECT Branch_name, Loan_number, 200</para>
+        <para id="id20290273">FROM Loan</para>
+        <para id="id20290281">WHERE Branch_name = ‘Perryridge’</para>
+        <para id="id20290290">INSERT INTO Depositor</para>
+        <para id="id20290296">SELECT Customer_name, Loan_number</para>
+        <para id="id20290304">FROM Borrower, Loan</para>
+        <para id="id20290311">WHERE Borrower.Loan_number = Loan.Loan_number AND</para>
+        <para id="id20290320">Branch_name = ‘Perryridge’</para>
+      </section>
+      <section id="id-935330812289">
+        <title>CẬP NHẬT (Update)</title>
+        <para id="id20290339">Câu lệnh UPDATE cho phép thay đổi giá trị thuộc tính của các bộ</para>
+        <para id="id20290346">“Thêm lãi hàng năm vào số cân đối với tỷ lệ lãi suất 5%”</para>
+        <para id="id20290355">UPDATE Account</para>
+        <para id="id20290364">SET Balance = Balance*1.05</para>
+        <para id="id20290371">Giả sử các tài khoản có số cân đối &gt; 10000$ được hưởng lãi suất 6%, các tài khoản có số cân đối nhỏ hơn hoặc bằng 10000 được hưởng lãi suất 5%</para>
+        <para id="id20290383">UPDATE Account</para>
+        <para id="id20290396">SET Balance = Balance*1.06</para>
+        <para id="id20290403">WHERE Balance &gt; 10000</para>
+        <para id="id20290410">UPDATE Account</para>
+        <para id="id20290416">SET Balance = Balance*1.05</para>
+        <para id="id20290422">WHERE Balance &lt;= 10000</para>
+        <para id="id20290429">SQL92 đưa vào cấu trúc CASE như sau:</para>
+        <para id="id20290438">CASE </para>
+        <para id="id20290445">WHEN P1 THEN Result1</para>
+        <para id="id20290468">WHEN P2 THEN Result2</para>
+        <para id="id20290492">...</para>
+        <para id="id20290499">WHEN Pn THEN Resultn</para>
+        <para id="id20290507">ELSEResult0</para>
+        <para id="id20290524">END</para>
+        <para id="id20290534">trong đó Pi là các vị từ, Resulti là các kết quả trả về của hoạt động CASE tương ứng với vị từ Pi đầu tiên thỏa mãn. Nếu không vị từ Pi nào thỏa mãn CASE trả về Result0.</para>
+        <para id="id20290591">Với cấu trúc CASE như vậy ta có thể viết lại yêu cầu trên như sau:</para>
+        <para id="id20290602">UPDATE Account</para>
+        <para id="id20290609">SET Balance = CASE </para>
+        <para id="id20290616">WHEN Balance &gt; 10000 THEN Balance*1.06</para>
+        <para id="id20290625">ELSE Balance*1.05</para>
+        <para id="id20290632">END</para>
+        <para id="id20290645">“Trả 5% lãi cho các tài khoản có số cân đối lớn hơn số cân đối trung bình”</para>
+        <para id="id20290654">UPDATE Account</para>
+        <para id="id20290667">SET Balance = Balance*1.05</para>
+        <para id="id20290674">WHERE Balance &gt; SELECT AVG(Balance)</para>
+        <para id="id20290683">FROM Account</para>
+      </section>
+    </section>
+    <section id="id-232889106545">
+      <title>CÁC QUAN HỆ NỐI </title>
+      <para id="id20290703">SQL92 cung cấp nhiều cơ chế cho nối các quan hệ bao hàm nối có điều kiện và nối tự nhiên cũng như các dạng của nối ngoài.</para>
+      <para id="id20290712">Loan INNER JOIN Borrower</para>
+      <para id="id20290717">ON Loan.Loan_number = Borrower.Loan_number</para>
+      <para id="id20290722">Nối quan hệ Loan và quan hệ Borrower với điều kiên:</para>
+      <para id="id20290728">Loan.Loan_number = Borrower.Loan_number</para>
+      <para id="id20290733">Quan hệ kết quả có các thuộc tính của quan hệ Loan và các thuộc tính của quan hệ Borrower (như vậy thuộc tính Loan_number xuất hiện 2 lần trong quan hệ kết quả). </para>
+      <para id="id20290744">Để đổi tên quan hệ (kết quả) và các thuộc tính, ta sử dụng mệnh đề AS</para>
+      <para id="id20290755">Loan INNER JOIN Borrower</para>
+      <para id="id20290760">ON Loan.Loan_number = Borrower.Loan_number</para>
+      <para id="id20290767">AS LB(Branch, Loan_number, Amount, Cust, Cust_Loan_number)</para>
+      <para id="id20290777">Loan LEFT OUTER JOIN Borrower</para>
+      <para id="id20290781">ON Loan.Loan_number = Borrower.Loan_number</para>
+      <para id="id20290786">Phép nối ngoài trái được tính như sau: Đầu tiên tính kết quả của nối trong INNER JOIN. Sau đó đối với mỗi bộ t của quan hệ trái (Loan) không tương xứng với bộ nào trong quan hệ bên phải (borrower) khi đó thêm vào kết quả bộ r gồm các giá trị thuộc tính trái là các giá trị thuộc tính của t, các thuộc tính còn lại (phải) được đặt là null. </para>
+      <para id="id20290800">Loan NATURAL INNER JOIN Borrower</para>
+      <para id="id20290804">Là nối tự nhiên của quan hệ Loan và quan hệ Borrower (thuộc tính trùng tên là Loan_number).</para>
+    </section>
+    <section id="id-191500870095">
+      <title>NGÔN NGỮ ĐỊNH NGHĨA DỮ LIỆU (DDL)</title>
+      <para id="id20290823">DDL SQL cho phép đặc tả:</para>
+      <list id="id20290828" list-type="bulleted">
+        <item>Sơ đồ cho mỗi quan hệ</item>
+        <item>Miền giá trị kết hợp với mỗi thuộc tính</item>
+        <item>các ràng buộc toàn vẹn</item>
+        <item>tập các chỉ mục được duy trì cho mỗi quan hệ</item>
+        <item>thông tin về an toàn và quyền cho mỗi quan hệ</item>
+        <item>cấu trúc lưu trữ vật lý của mỗi quan hệ trên đĩa</item>
+      </list>
+      <section id="id-840894104963">
+        <title>CÁC KIỂU MIỀN TRONG SQL </title>
+        <para id="id20290879">SQL-92 hỗ trợ nhiều kiểu miền trong đó bao hàm các kiểu sau:</para>
+        <list id="id20290885" list-type="bulleted">
+          <item>char(n) / charater: chuỗi ký tự dộ dài cố định, với độ dài n được xác định bởi người dùng</item>
+          <item>vachar(n) / character varying (n): chuỗi ký tự độ dài thay đổi, với độ dài tối đa được xác dịnh bởi người dung là n</item>
+          <item>int / integer: tập hữu hạn các số nguyên</item>
+          <item>smallint: tập con của tập các số nguyên int</item>
+          <item>numeric(p, d): số thực dấu chấm tĩnh gồm p chữ số (kể cả dấu) và d trong p chữ số là các chữ số phần thập phân</item>
+          <item>real, double precision: số thực dấu chấm động và số thực dấu chấm động chính xác kép</item>
+          <item>float(n): số thực dấu chấm động với độ chính xác được xác định bởi người dùng ít nhất là n chữ số thập phân</item>
+          <item>date: kiểu năm tháng ngày (YYYY, MM, DD)</item>
+          <item>time: kiểu thời gian (HH, MM, SS)</item>
+        </list>
+        <para id="id20291008">SQL-92 cho phép định nghĩa miền với cú pháp:</para>
+        <para id="id20291014">CREATE DOMAIN &lt; tên miền &gt; &lt; Type &gt;</para>
+        <para id="id20291030">Ví dụ: CREATE DOMAIN hoten char(30);</para>
+        <para id="id20291041">Sau khi đã định nghĩa miền với tên hoten ta có thể sử dụng nó để định nghĩa kiểu của các thuộc tính</para>
+      </section>
+      <section id="id-285971006897">
+        <title>ĐỊNH NGHĨA SƠ ĐỒ TRONG SQL. </title>
+        <para id="id20291058">Lệnh CREATE TABLE với cú pháp</para>
+        <para id="id20623466">CREATE TABLE &lt; tên bảng &gt; ( </para>
+        <para id="id20623473">&lt; Thuộc tính 1 &gt;&lt; miền giá trị thuộc tính 1 &gt; ,</para>
+        <para id="id20623485">...</para>
+        <para id="id20623491">&lt; Thuộc tính n &gt;&lt; miền giá trị thuộc tính n&gt; ,</para>
+        <para id="id20623502">&lt; ràng buộc toàn vẹn 1 &gt; ,</para>
+        <para id="id20623510">...</para>
+        <para id="id20623516">&lt; ràng buộc toàn vẹn k &gt;)</para>
+        <para id="id20623523">Các ràng buộc toàn vẹn cho phép bao gồm:</para>
+        <para id="id20623529">primary key (
+<m:math><m:semantics><m:mrow><m:mstyle fontsize="12pt"><m:mrow><m:mrow><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mn>1</m:mn></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub><m:mi>,</m:mi><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mn>2</m:mn></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub><m:mi>,</m:mi><m:mtext>.</m:mtext><m:mtext>.</m:mtext><m:mtext>.</m:mtext><m:mi>,</m:mi><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mi>m</m:mi></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub></m:mrow></m:mrow></m:mstyle><m:mrow/></m:mrow><m:annotation encoding="StarMath 5.0"> size 12{ { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{1} } } } , { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{2} } } } , "."  "."  "." , { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{m} } } } } {}</m:annotation></m:semantics></m:math>)</para>
+        <para id="id20623676">và</para>
+        <para id="id20623681">check(P)</para>
+        <para id="id20623689">Đặc tả primary key chỉ ra rằng các thuộc tính 
+<m:math><m:semantics><m:mrow><m:mstyle fontsize="12pt"><m:mrow><m:mrow><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mn>1</m:mn></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub><m:mi>,</m:mi><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mn>2</m:mn></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub><m:mi>,</m:mi><m:mtext>.</m:mtext><m:mtext>.</m:mtext><m:mtext>.</m:mtext><m:mi>,</m:mi><m:msub><m:mstyle fontsize="10pt"><m:mrow><m:mi>A</m:mi></m:mrow></m:mstyle><m:mstyle fontsize="8pt"><m:mrow><m:msub><m:mi>i</m:mi><m:mstyle fontsize="6pt"><m:mrow><m:mi>m</m:mi></m:mrow></m:mstyle></m:msub></m:mrow></m:mstyle></m:msub></m:mrow></m:mrow></m:mstyle><m:mrow/></m:mrow><m:annotation encoding="StarMath 5.0"> size 12{ { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{1} } } } , { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{2} } } } , "."  "."  "." , { size 10{A} }  rSub { size 8{ {i}  rSub { size 6{m} } } } } {}</m:annotation></m:semantics></m:math> tạo nên khoá chính của quan hệ. Mệnh đề check xác định một vị từ P mà mỗi bộ trong quan hệ phải thoả mãn.</para>
+        <para id="id20623843">Ví dụ:</para>
+        <para id="id20623847">CREATE TABLE customer (</para>
+        <para id="id20623852">customer_nameCHAR(20) not null,</para>
+        <para id="id20623860">customer_streetCHAR(30),</para>
+        <para id="id20623868">customer_cityCHAR(30),</para>
+        <para id="id20623877">PRIMARY KEY(customer_name));</para>
+        <para id="id20623882">CREATE TABLE branch (</para>
+        <para id="id20623887">branch_nameCHAR(15) not null,</para>
+        <para id="id20623896">branch_cityCHAR(30),</para>
+        <para id="id20623905">assetsINTEGER,</para>
+        <para id="id20623915">PRIMARY KEY (branch_name),</para>
+        <para id="id20623921">CHECK (assets &gt;= 0));</para>
+        <para id="id20623927">CREATE TABLE account (</para>
+        <para id="id20623931">account_numberCHAR(10) not null,</para>
+        <para id="id20623939">branch_nameCHAR(15),</para>
+        <para id="id20623948">balanceINTEGER,</para>
+        <para id="id20623957">PRIMARY KEY (account_number),</para>
+        <para id="id20623962">CHECK(balance &gt;= 0));</para>
+        <para id="id20623971">CREATE TABLE depositor (</para>
+        <para id="id20623975">customer_nameCHAR(20) not null,</para>
+        <para id="id20623983">account_numberCHAR(10) not null,</para>
+        <para id="id20623992">PRIMARY KEY (customer_name, account_namber));</para>
+        <para id="id20623998">Giá trị null là giá trị hợp lệ cho mọi kiểu trong SQL. Các thuộc tính được khai báo là primary key đòi hỏi phải là not null và duy nhất. do vậy các khai báo not null trong ví dụ trên là dư (trong SQL-92).</para>
+        <para id="id20624027">CREATE TABLE student (</para>
+        <para id="id20624031">nameCHAR(15) not null,</para>
+        <para id="id20624041">student_IDCHAR(10) not null,</para>
+        <para id="id20624050">degree_levelCHAR(15) not null,</para>
+        <para id="id20624060">PRIMARY KEY (student_ID),</para>
+        <para id="id20624065">CHECK (degree_level IN (‘Bachelors’, ‘Masters’, ‘Doctorats’));</para>
+        <list id="id20624077" list-type="bulleted">
+          <item>Xoá một quan hệ khỏi CSDL sử dụng lệnh Drop table với cú pháp:</item>
+        </list>
+        <para id="id20624098">DROP TABLE &lt; tên bảng &gt;</para>
+        <list id="id20624103" list-type="bulleted">
+          <item>Thêm thuộc tính vào bảng đang tồn tại sử dụng lệnh Alter table với cú pháp:</item>
+        </list>
+        <para id="id20624120">ALTER TABLE &lt; tên bảng &gt; ADD &lt; thuộc tính &gt; &lt; miền giá trị &gt;</para>
+        <list id="id20624134" list-type="bulleted">
+          <item>Xoá bỏ một thuộc tính khỏi bảng đang tồn tại sử dụng lệnh Alter table với cú pháp:</item>
+        </list>
+        <para id="id20624149">ALTER TABLE &lt; Tên bảng &gt; DROP &lt; tên thuộc tính &gt;</para>
+      </section>
+    </section>
+    <section id="id-210333052934">
+      <title>SQL NHÚNG (Embedded SQL)</title>
+      <para id="id20624164">Một ngôn ngữ trong đó các vấn tin SQL được nhúng gọi là ngôn ngữ chủ (host language), cấu trúc SQL cho phép trong ngôn ngữ chủ tạo nên SQL nhúng. Chương trình được viết trong ngôn ngữ chủ có thể sử dụng cú pháp SQL nhúng để truy xuất và cập nhật dữ liệu được lưu trữ trong CSDL.</para>
+      <para id="id20624186">BÀI TẬP CHƯƠNG II</para>
+      <list id="id20624194" list-type="bulleted">
+        <item>Xét CSDL bảo hiểm sau:</item>
+      </list>
+      <para id="id20624201">person(ss#, name, address): Số bảo hiểm ss# sở hữu bởi người tên name ở địa chỉ address</para>
+      <para id="id20624222">car(license, year, model): Xe hơi số dăng ký license, sản xuất năm year, nhãn hiệu Model</para>
+      <para id="id20624253">accident(date, driver, damage_amount): tai nạn xảy ra ngày date, do người lái driver, mức hư hại damage_amount</para>
+      <para id="id20624283">owns(ss#, license): người mang số bảo hiểm ss# sở hữu chiếc xe mang số đăng ký license</para>
+      <para id="id20624313">log(license, date, driver): ghi sổ chiếc xe mang số đăng ký license, bị tai nạn ngày do người lái driver</para>
+      <para id="id20624351">các thuộc tính được gạch dưới là các primary key. Viết trong SQL các câu vấn tin sau:</para>
+      <list id="id20624362" list-type="bulleted">
+        <item>Tìm tổng số người xe của họ gặp tai nạn năm 2001</item>
+        <item>Tìm số các tai nạn trong đó xe của"John"liên quan tới</item>
+        <item>Thêm khách hàng mới: ss# =”A-12345”, name ="David”, address ="35 Chevre Road”, license ="109283”, year =”2002”, model ="FORD LASER"vào CSDL</item>
+        <item>xoá các thông tin lien quan dến xe model "MAZDA"của"John Smith”</item>
+        <item>Thêm thông tin tai nạn cho chiếc xe"TOYOTA"của khách hàng mang số bảo hiểm số"A-84626”</item>
+        <item>Xét CSDL nhân viên:</item>
+      </list>
+      <para id="id20624414">employee (E_name, street, city): Nhân viên có tên E_name, cư trú tại phố street, trong thành phố city</para>
+      <para id="id20624438">works (E_name, C_name, salary): Nhân viên tên E_name làm việc cho công ty C_name với mức lương salary</para>
+      <para id="id20624467">copany (C_name, city): Công ty tên C_name đóng tại thành phố city</para>
+      <para id="id20624487">manages(E_name, M_name): Nhân viên E_name dưới sự quản lý của nhân viên M_name</para>
+      <para id="id20624516">Viết trong SQL các câu vấn tin sau:</para>
+      <list id="id20624523" list-type="enumerated">
+        <item>Tìm tên của tất cả các nhân viên làm việc cho First Bank</item>
+        <item>Tìm tên và thành phố cư trú của các nhân viên làm việc cho First Bank</item>
+        <item>Tìm tên, phố, thành phố cư trú làm việc cho First Bank hưởng mức lương &gt; 10000$</item>
+        <item>Tìm tất cả các nhân viên trong CSDL sống trong cùng thành phố với công ty mang họ làm việc cho</item>
+        <item>Tìm tất cả các nhân viên sông trong cùng thành phố, cùng phố với người quản lý của họ</item>
+        <item>Tìm trong CSDL các nhân viên không làm việc cho First Bank</item>
+        <item>Tìm trong CSDL, các nhân viên hưởng mức lương cao hơn mọi nhân viên của Small Bank</item>
+        <item>Giả sử một công ty có thể đóng trong một vaì thành phố. Tìm tất cả các công ty đóng trong mỗi thành phố trong đó Small Bank đóng.</item>
+        <item>Tìm tất cả các nhân viên hưởng múc lương cao hơn mức lương trung bình của công ty họ làm việc</item>
+        <item>Tìm công ty có nhiều nhân viên nhất</item>
+        <item>Tìm công ty có tổng số tiền trả lương nhỏ nhất</item>
+        <item>Tìm tất cả các công ty có mức lương trung bình cao hơn mức luong trung bình của công ty First Bank</item>
+        <item>Thay đổi thành phố cư trú của nhân viên"Jones"thành NewTown</item>
+        <item>Nâng lương cho tất cả các nhân viên của First Bank lên 10%</item>
+        <item>nâng lương cho các nhà quản lý của công ty First Bank lên 10%</item>
+        <item>Xoá tất cả các thông tin liên quan tới cong ty Bad Bank</item>
+      </list>
+    </section>
+  </content>
+</document>
