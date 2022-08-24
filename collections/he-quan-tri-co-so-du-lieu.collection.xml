@@ -1,3 +1,19 @@
-<col:collection xmlns="http://cnx.rice.edu/collxml" xmlns:col="http://cnx.rice.edu/collxml" xml:lang="en">  <metadata xmlns:md="http://cnx.rice.edu/mdml" mdml-version="0.5">  <md:content-id>col10838</md:content-id>  <md:title>Hệ quản trị cơ sở dữ liệu</md:title>      <md:license url="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution License 3.0</md:license>  <md:language>vi</md:language>              <md:uuid>a199c838-0cef-4807-9357-4b1eb57e0641</md:uuid>
-<md:slug>he-quan-tri-co-so-du-lieu</md:slug>
-</metadata>  <col:content>          <col:module document="m30471"/>                            <col:module document="m29922"/>                            <col:module document="m30189"/>                            <col:module document="m30374"/>                            <col:module document="m29965"/>                            <col:module document="m30524"/>                    </col:content></col:collection>
+<?xml version="1.0"?>
+<col:collection xmlns="http://cnx.rice.edu/collxml" xmlns:col="http://cnx.rice.edu/collxml" xml:lang="en" authors="CN. Ph&#x1EA1;m Gia Ti&#x1EBF;n">
+  <metadata xmlns:md="http://cnx.rice.edu/mdml" mdml-version="0.5">
+    <md:content-id>col10838</md:content-id>
+    <md:title>H&#x1EC7; qu&#x1EA3;n tr&#x1ECB; c&#x1A1; s&#x1EDF; d&#x1EEF; li&#x1EC7;u</md:title>
+    <md:license url="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution License 3.0</md:license>
+    <md:language>vi</md:language>
+    <md:uuid>a199c838-0cef-4807-9357-4b1eb57e0641</md:uuid>
+    <md:slug>he-quan-tri-co-so-du-lieu</md:slug>
+  </metadata>
+  <col:content>
+    <col:module document="m30471"/>
+    <col:module document="m29922"/>
+    <col:module document="m30189"/>
+    <col:module document="m30374"/>
+    <col:module document="m29965"/>
+    <col:module document="m30524"/>
+  </col:content>
+</col:collection>
